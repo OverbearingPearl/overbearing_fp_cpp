@@ -29,6 +29,8 @@
 #include <unordered_map>
 #include <utility>
 
+#include "src/side_effects/io/logging.h"
+
 namespace side_effects {
 namespace memoization {
 
@@ -91,10 +93,12 @@ class Memoization {
       auto& cache = getCache<KeyType, ResultType>();
       auto it = cache.find(key);
       if (it == cache.end()) {
+        LOG("Cache miss");
         ResultType result = func(arg);
         cache[key] = std::make_shared<ResultType>(result);
         return result;
       }
+      LOG("Cache hit");
       return *std::static_pointer_cast<ResultType>(it->second);
     };
   }
