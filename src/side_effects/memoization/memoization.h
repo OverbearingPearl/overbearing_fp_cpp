@@ -82,35 +82,40 @@ struct TupleEqual {
 
 class Memoization {
  public:
-  template <typename ResultType, typename... Args>
-  auto memoize(std::function<ResultType(Args...)> func)
-      -> std::function<ResultType(Args...)> {
-    return [this, func](Args... args) -> ResultType {
+  template <typename Func>
+  struct MemoizedFunc;
+
+  template <typename ReturnType, typename... Args>
+  struct MemoizedFunc<ReturnType(Args...)> {
+    MemoizedFunc(std::function<ReturnType(Args...)> func) : func_(func) {}
+
+    ReturnType operator()(Args... args) {
       using KeyType = std::tuple<Args...>;
+      using ResultType = ReturnType;
 
       KeyType key = std::make_tuple(args...);
-      auto& cache = getCache<KeyType, ResultType>();
-      auto it = cache.find(key);
-      if (it == cache.end()) {
+      auto it = cache_.find(key);
+      if (it == cache_.end()) {
         LOG("Cache miss");
-        ResultType result = func(args...);
-        cache[key] = std::make_shared<ResultType>(result);
+        ResultType result = func_(args...);
+        cache_[key] = std::make_shared<ResultType>(result);
         return result;
       }
       LOG("Cache hit");
       return *std::static_pointer_cast<ResultType>(it->second);
-    };
-  }
+    }
 
- private:
-  template <typename KeyType, typename ResultType>
-  using CacheType = std::unordered_map<KeyType, std::shared_ptr<ResultType>,
-                                       TupleHash, TupleEqual>;
+   private:
+    std::function<ReturnType(Args...)> func_;
+    std::unordered_map<std::tuple<Args...>, std::shared_ptr<ReturnType>,
+                       TupleHash, TupleEqual>
+        cache_;
+  };
 
-  template <typename KeyType, typename ResultType>
-  CacheType<KeyType, ResultType>& getCache() const {
-    static CacheType<KeyType, ResultType> cache;
-    return cache;
+  template <typename ReturnType, typename... Args>
+  MemoizedFunc<ReturnType(Args...)> memoize(
+      std::function<ReturnType(Args...)> func) {
+    return MemoizedFunc<ReturnType(Args...)>(func);
   }
 };
 
