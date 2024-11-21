@@ -82,19 +82,18 @@ struct TupleEqual {
 
 class Memoization {
  public:
-  template <typename Func>
-  auto memoize(Func func)
-      -> std::function<decltype(func(std::declval<int>()))(int)> {
-    return [this, func](int arg) -> decltype(func(arg)) {
-      using KeyType = std::tuple<int>;
-      using ResultType = decltype(func(arg));
+  template <typename ResultType, typename... Args>
+  auto memoize(std::function<ResultType(Args...)> func)
+      -> std::function<ResultType(Args...)> {
+    return [this, func](Args... args) -> ResultType {
+      using KeyType = std::tuple<Args...>;
 
-      KeyType key = std::make_tuple(arg);
+      KeyType key = std::make_tuple(args...);
       auto& cache = getCache<KeyType, ResultType>();
       auto it = cache.find(key);
       if (it == cache.end()) {
         LOG("Cache miss");
-        ResultType result = func(arg);
+        ResultType result = func(args...);
         cache[key] = std::make_shared<ResultType>(result);
         return result;
       }
