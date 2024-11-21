@@ -44,7 +44,7 @@ struct TupleHash {
   struct Hasher {
     std::size_t operator()(const Tuple& t) const {
       std::size_t hash = Hasher<Tuple, Index - 1>()(t);
-      TupleHash::hashCombine(hash, std::get<Index>(t));
+      TupleHash::hashCombine(&hash, std::get<Index>(t));
       return hash;
     }
   };
@@ -53,7 +53,7 @@ struct TupleHash {
   struct Hasher<Tuple, 0> {
     std::size_t operator()(const Tuple& t) const {
       std::size_t hash = 0;
-      TupleHash::hashCombine(hash, std::get<0>(t));
+      TupleHash::hashCombine(&hash, std::get<0>(t));
       return hash;
     }
   };
@@ -64,9 +64,9 @@ struct TupleHash {
   }
 
   template <typename T>
-  static void hashCombine(std::size_t& seed, const T& value) {
+  static void hashCombine(std::size_t* seed, const T& value) {
     std::hash<T> hasher;
-    seed ^= hasher(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    *seed ^= hasher(value) + 0x9e3779b9 + (*seed << 6) + (*seed >> 2);
   }
 };
 
