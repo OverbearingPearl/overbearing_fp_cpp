@@ -30,64 +30,31 @@
 #include <utility>
 
 #include "src/side_effects/io/logging.h"
+#include "src/side_effects/memoization/caching.h"
+#include "src/side_effects/memoization/tuple_hash.h"
 
 namespace side_effects {
 namespace memoization {
 
-struct TupleHash {
-  template <typename... Args>
-  std::size_t operator()(const std::tuple<Args...>& t) const {
-    return hashTuple(t);
-  }
+template <typename Func>
+struct function_traits;
 
- private:
-  template <typename Tuple,
-            std::size_t Index = std::tuple_size<Tuple>::value - 1>
-  struct Hasher {
-    std::size_t operator()(const Tuple& t) const {
-      std::size_t hash = Hasher<Tuple, Index - 1>()(t);
-      TupleHash::hashCombine(&hash, std::get<Index>(t));
-      return hash;
-    }
-  };
-
-  template <typename Tuple>
-  struct Hasher<Tuple, 0> {
-    std::size_t operator()(const Tuple& t) const {
-      std::size_t hash = 0;
-      TupleHash::hashCombine(&hash, std::get<0>(t));
-      return hash;
-    }
-  };
-
-  template <typename Tuple>
-  std::size_t hashTuple(const Tuple& t) const {
-    return Hasher<Tuple>()(t);
-  }
-
-  template <typename T>
-  static void hashCombine(std::size_t* seed, const T& value) {
-    std::hash<T> hasher;
-    *seed ^= hasher(value) + 0x9e3779b9 + (*seed << 6) + (*seed >> 2);
-  }
-};
-
-struct TupleEqual {
-  template <typename... Args>
-  bool operator()(const std::tuple<Args...>& t1,
-                  const std::tuple<Args...>& t2) const {
-    return t1 == t2;
-  }
+template <typename ReturnType, typename... Args>
+struct function_traits<std::function<ReturnType(Args...)>> {
+  using result_type = ReturnType;
+  using arg_tuple_type = std::tuple<Args...>;
 };
 
 class Memoization {
  public:
-  template <typename Func>
+  template <typename Func, typename CachePolicy>
   struct MemoizedFunc;
 
-  template <typename ReturnType, typename... Args>
-  struct MemoizedFunc<ReturnType(Args...)> {
-    MemoizedFunc(std::function<ReturnType(Args...)> func) : func_(func) {}
+  template <typename ReturnType, typename... Args, typename CachePolicy>
+  struct MemoizedFunc<ReturnType(Args...), CachePolicy> {
+    MemoizedFunc(std::function<ReturnType(Args...)> func,
+                 CachePolicy cache_policy = CachePolicy())
+        : func_(func), cache_policy_(cache_policy) {}
 
     ReturnType operator()(Args... args) {
       using KeyType = std::tuple<Args...>;
@@ -98,7 +65,7 @@ class Memoization {
       if (it == cache_.end()) {
         LOG("Cache miss");
         ResultType result = func_(args...);
-        cache_[key] = std::make_shared<ResultType>(result);
+        cache_policy_.insert(cache_, key, std::make_shared<ResultType>(result));
         return result;
       }
       LOG("Cache hit");
@@ -107,15 +74,19 @@ class Memoization {
 
    private:
     std::function<ReturnType(Args...)> func_;
+    CachePolicy cache_policy_;
     std::unordered_map<std::tuple<Args...>, std::shared_ptr<ReturnType>,
                        TupleHash, TupleEqual>
         cache_;
   };
 
-  template <typename ReturnType, typename... Args>
-  MemoizedFunc<ReturnType(Args...)> memoize(
-      std::function<ReturnType(Args...)> func) {
-    return MemoizedFunc<ReturnType(Args...)>(func);
+  template <typename ReturnType, typename... Args,
+            typename CachePolicy =
+                DefaultCachePolicy<std::tuple<Args...>, ReturnType>>
+  MemoizedFunc<ReturnType(Args...), CachePolicy> memoize(
+      std::function<ReturnType(Args...)> func,
+      CachePolicy cache_policy = CachePolicy()) {
+    return MemoizedFunc<ReturnType(Args...), CachePolicy>(func, cache_policy);
   }
 };
 
