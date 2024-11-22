@@ -31,7 +31,6 @@
 
 #include "src/side_effects/io/logging.h"
 #include "src/side_effects/memoization/caching.h"
-#include "src/side_effects/memoization/tuple_hash.h"
 
 namespace side_effects {
 namespace memoization {
@@ -75,9 +74,7 @@ class Memoization {
    private:
     std::function<ReturnType(Args...)> func_;
     CachePolicy cache_policy_;
-    std::unordered_map<std::tuple<Args...>, std::shared_ptr<ReturnType>,
-                       TupleHash, TupleEqual>
-        cache_;
+    Cache<std::tuple<Args...>, ReturnType> cache_;
   };
 
   template <typename ReturnType, typename... Args,

@@ -30,20 +30,22 @@
 #include "src/side_effects/memoization/tuple_hash.h"
 
 template <typename KeyType, typename ValueType>
+using Cache = std::unordered_map<KeyType, std::shared_ptr<ValueType>, TupleHash,
+                                 TupleEqual>;
+
+template <typename KeyType, typename ValueType>
 class CachePolicy {
  public:
-  virtual void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>,
-                                         TupleHash, TupleEqual>& cache,
-                      const KeyType& key, std::shared_ptr<ValueType> value) = 0;
+  virtual void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
+                      std::shared_ptr<ValueType> value) = 0;
   virtual ~CachePolicy() = default;
 };
 
 template <typename KeyType, typename ValueType>
 class DefaultCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>, TupleHash,
-                                 TupleEqual>& cache,
-              const KeyType& key, std::shared_ptr<ValueType> value) override {
+  void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
+              std::shared_ptr<ValueType> value) override {
     cache[key] = value;
   }
 };
