@@ -22,9 +22,11 @@
 
 #pragma once
 
+#include <algorithm>
 #include <list>
 #include <memory>
 #include <unordered_map>
+#include <utility>
 
 #include "src/side_effects/memoization/cache/policy.h"
 
@@ -49,9 +51,12 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
 
  private:
   void evict(Cache<KeyType, ValueType>* cache) {
-    auto min_freq_it = std::min_element(
-        frequency_list_.begin(), frequency_list_.end(),
-        [](const auto& a, const auto& b) { return a.second < b.second; });
+    auto min_freq_it =
+        std::min_element(frequency_list_.begin(), frequency_list_.end(),
+                         [](const std::pair<KeyType, size_t>& a,
+                            const std::pair<KeyType, size_t>& b) {
+                           return a.second < b.second;
+                         });
     KeyType key_to_evict = min_freq_it->first;
     cache->erase(key_to_evict);
     frequency_list_.erase(key_to_evict);
@@ -59,7 +64,7 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
   }
 
   size_t capacity_;
-  std::unordered_map<KeyType, size_t> frequency_list_;
+  std::unordered_map<KeyType, size_t, TupleHash, TupleEqual> frequency_list_;
   std::list<KeyType> frequency_order_;
 };
 
