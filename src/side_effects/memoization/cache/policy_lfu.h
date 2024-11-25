@@ -23,6 +23,7 @@
 #pragma once
 
 #include <list>
+#include <memory>
 #include <unordered_map>
 
 #include "src/side_effects/memoization/cache/policy.h"
