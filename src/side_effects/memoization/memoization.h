@@ -45,10 +45,20 @@ struct function_traits<std::function<ReturnType(Args...)>> {
 };
 
 class Memoization {
- public:
   template <typename Func, typename CachePolicy>
   struct MemoizedFunc;
 
+ public:
+  template <typename ReturnType, typename... Args,
+            typename CachePolicy =
+                DefaultCachePolicy<std::tuple<Args...>, ReturnType>>
+  MemoizedFunc<ReturnType(Args...), CachePolicy> memoize(
+      std::function<ReturnType(Args...)> func,
+      CachePolicy cache_policy = CachePolicy()) {
+    return MemoizedFunc<ReturnType(Args...), CachePolicy>(func, cache_policy);
+  }
+
+ private:
   template <typename ReturnType, typename... Args, typename CachePolicy>
   struct MemoizedFunc<ReturnType(Args...), CachePolicy> {
     MemoizedFunc(std::function<ReturnType(Args...)> func,
@@ -76,15 +86,6 @@ class Memoization {
     CachePolicy cache_policy_;
     Cache<std::tuple<Args...>, ReturnType> cache_;
   };
-
-  template <typename ReturnType, typename... Args,
-            typename CachePolicy =
-                DefaultCachePolicy<std::tuple<Args...>, ReturnType>>
-  MemoizedFunc<ReturnType(Args...), CachePolicy> memoize(
-      std::function<ReturnType(Args...)> func,
-      CachePolicy cache_policy = CachePolicy()) {
-    return MemoizedFunc<ReturnType(Args...), CachePolicy>(func, cache_policy);
-  }
 };
 
 }  // namespace memoization
