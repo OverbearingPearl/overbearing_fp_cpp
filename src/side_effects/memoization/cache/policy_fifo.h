@@ -37,17 +37,17 @@ class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
   explicit FIFOCachePolicy(size_t capacity) : capacity_(capacity) {}
 
-  void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
-              const KeyType& key, std::shared_ptr<ValueType> value) override {
-    if (cache.size() >= capacity_) {
+  void insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
+              std::shared_ptr<ValueType> value) override {
+    if (cache->size() >= capacity_) {
       evict(cache);
     }
-    cache[key] = value;
+    (*cache)[key] = value;
     order_.push(key);
   }
 
  private:
-  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>* cache) {
+  void evict(Cache<KeyType, ValueType>* cache) {
     KeyType key_to_evict = order_.front();
     cache->erase(key_to_evict);
     order_.pop();

@@ -36,12 +36,12 @@ class ClearCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
   explicit ClearCachePolicy(size_t capacity) : capacity_(capacity) {}
 
-  void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
-              const KeyType& key, std::shared_ptr<ValueType> value) override {
-    if (cache.size() >= capacity_) {
-      cache.clear();
+  void insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
+              std::shared_ptr<ValueType> value) override {
+    if (cache->size() >= capacity_) {
+      cache->clear();
     }
-    cache[key] = value;
+    (*cache)[key] = value;
   }
 
  private:

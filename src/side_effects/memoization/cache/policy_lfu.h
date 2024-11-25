@@ -37,18 +37,18 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
   explicit LFUCachePolicy(size_t capacity) : capacity_(capacity) {}
 
-  void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
-              const KeyType& key, std::shared_ptr<ValueType> value) override {
-    if (cache.size() >= capacity_) {
-      evict(&cache);
+  void insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
+              std::shared_ptr<ValueType> value) override {
+    if (cache->size() >= capacity_) {
+      evict(cache);
     }
-    cache[key] = value;
+    (*cache)[key] = value;
     frequency_list_[key] = 1;
     frequency_order_.push_back(key);
   }
 
  private:
-  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>* cache) {
+  void evict(Cache<KeyType, ValueType>* cache) {
     auto min_freq_it = std::min_element(
         frequency_list_.begin(), frequency_list_.end(),
         [](const auto& a, const auto& b) { return a.second < b.second; });
