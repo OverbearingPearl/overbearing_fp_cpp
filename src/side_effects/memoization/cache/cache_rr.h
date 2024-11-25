@@ -20,22 +20,23 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_FIFO_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_FIFO_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_RR_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_RR_H_
 
-#include <queue>
+#include <cstdlib>
 #include <unordered_map>
+#include <vector>
 
-#include "src/side_effects/memoization/cache/caching.h"
+#include "src/side_effects/memoization/cache/cache.h"
 
 namespace side_effects {
 namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
+class RRCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  FIFOCachePolicy(size_t capacity) : capacity_(capacity) {}
+  RRCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
@@ -43,22 +44,23 @@ class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
       evict(cache);
     }
     cache[key] = value;
-    order_.push(key);
+    keys_.push_back(key);
   }
 
  private:
   void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
-    KeyType key_to_evict = order_.front();
+    size_t index = std::rand() % keys_.size();
+    KeyType key_to_evict = keys_[index];
     cache.erase(key_to_evict);
-    order_.pop();
+    keys_.erase(keys_.begin() + index);
   }
 
   size_t capacity_;
-  std::queue<KeyType> order_;
+  std::vector<KeyType> keys_;
 };
 
 }  // namespace cache
 }  // namespace memoization
 }  // namespace side_effects
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_FIFO_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_RR_H_

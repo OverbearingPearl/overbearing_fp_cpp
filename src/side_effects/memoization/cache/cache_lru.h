@@ -20,23 +20,22 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_RR_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_RR_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_LRU_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_LRU_H_
 
-#include <cstdlib>
+#include <list>
 #include <unordered_map>
-#include <vector>
 
-#include "src/side_effects/memoization/cache/caching.h"
+#include "src/side_effects/memoization/cache/cache.h"
 
 namespace side_effects {
 namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class RRCachePolicy : public CachePolicy<KeyType, ValueType> {
+class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  RRCachePolicy(size_t capacity) : capacity_(capacity) {}
+  LRUCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
@@ -44,23 +43,26 @@ class RRCachePolicy : public CachePolicy<KeyType, ValueType> {
       evict(cache);
     }
     cache[key] = value;
-    keys_.push_back(key);
+    access_order_.push_front(key);
+    key_iterator_map_[key] = access_order_.begin();
   }
 
  private:
   void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
-    size_t index = std::rand() % keys_.size();
-    KeyType key_to_evict = keys_[index];
+    KeyType key_to_evict = access_order_.back();
     cache.erase(key_to_evict);
-    keys_.erase(keys_.begin() + index);
+    key_iterator_map_.erase(key_to_evict);
+    access_order_.pop_back();
   }
 
   size_t capacity_;
-  std::vector<KeyType> keys_;
+  std::list<KeyType> access_order_;
+  std::unordered_map<KeyType, typename std::list<KeyType>::iterator>
+      key_iterator_map_;
 };
 
 }  // namespace cache
 }  // namespace memoization
 }  // namespace side_effects
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_RR_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_LRU_H_

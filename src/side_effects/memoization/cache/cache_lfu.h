@@ -20,13 +20,13 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_LFU_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_LFU_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_LFU_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_LFU_H_
 
 #include <list>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/cache/caching.h"
+#include "src/side_effects/memoization/cache/cache.h"
 
 namespace side_effects {
 namespace memoization {
@@ -67,4 +67,4 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
 }  // namespace memoization
 }  // namespace side_effects
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_LFU_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_LFU_H_

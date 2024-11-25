@@ -20,42 +20,45 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_FIFO_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_FIFO_H_
 
-#include <memory>
-#include <tuple>
+#include <queue>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/cache/tuple_hash.h"
+#include "src/side_effects/memoization/cache/cache.h"
 
 namespace side_effects {
 namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-using Cache = std::unordered_map<KeyType, std::shared_ptr<ValueType>, TupleHash,
-                                 TupleEqual>;
-
-template <typename KeyType, typename ValueType>
-class CachePolicy {
+class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  virtual void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
-                      std::shared_ptr<ValueType> value) = 0;
-  virtual ~CachePolicy() = default;
-};
+  FIFOCachePolicy(size_t capacity) : capacity_(capacity) {}
 
-template <typename KeyType, typename ValueType>
-class DefaultCachePolicy : public CachePolicy<KeyType, ValueType> {
- public:
-  void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
-              std::shared_ptr<ValueType> value) override {
+  void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
+              const KeyType& key, std::shared_ptr<ValueType> value) override {
+    if (cache.size() >= capacity_) {
+      evict(cache);
+    }
     cache[key] = value;
+    order_.push(key);
   }
+
+ private:
+  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
+    KeyType key_to_evict = order_.front();
+    cache.erase(key_to_evict);
+    order_.pop();
+  }
+
+  size_t capacity_;
+  std::queue<KeyType> order_;
 };
 
 }  // namespace cache
 }  // namespace memoization
 }  // namespace side_effects
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_FIFO_H_
