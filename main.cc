@@ -23,43 +23,64 @@
 #include <functional>
 #include <iostream>
 
+#include "src/side_effects/memoization/cache/policy_lfu.h"
 #include "src/side_effects/memoization/memoization.h"
 
 int main() {
   side_effects::memoization::Memoization memoization;
+  auto lfu_policy =
+      side_effects::memoization::cache::LFUCachePolicy<std::tuple<int>, int>(4);
   auto fib =
       memoization.memoize<int, int>(std::function<int(int)>([](int n) -> int {
-        if (n < 2) {
-          return n;
-        }
-        int a = 0, b = 1, c;
-        for (int i = 2; i <= n; ++i) {
-          c = a + b;
-          a = b;
-          b = c;
-        }
-        return b;
-      }));
+                                      if (n < 2) {
+                                        return n;
+                                      }
+                                      int a = 0, b = 1, c;
+                                      for (int i = 2; i <= n; ++i) {
+                                        c = a + b;
+                                        a = b;
+                                        b = c;
+                                      }
+                                      return b;
+                                    }),
+                                    lfu_policy);
   auto fib1 =
       memoization.memoize<int, int>(std::function<int(int)>([](int n) -> int {
-        if (n < 2) {
-          return n;
-        }
-        int a = 0, b = 1, c;
-        for (int i = 2; i <= n; ++i) {
-          c = a + b;
-          a = b;
-          b = c;
-        }
-        return b;
-      }));
+                                      if (n < 2) {
+                                        return n;
+                                      }
+                                      int a = 0, b = 1, c;
+                                      for (int i = 2; i <= n; ++i) {
+                                        c = a + b;
+                                        a = b;
+                                        b = c;
+                                      }
+                                      return b;
+                                    }),
+                                    lfu_policy);
   int result = fib(10);
   fib(10);
   fib(11);
-  fib1(10);
-  fib1(10);
-  fib1(11);
   std::cout << "Fibonacci of 10 is " << result << std::endl;
 
+  std::cout << "Begin:" << std::endl;
+  std::cout << "fib(10)" << std::endl;
+  fib1(10);
+  std::cout << "fib(11)" << std::endl;
+  fib1(11);
+  std::cout << "fib(12)" << std::endl;
+  fib1(12);
+  std::cout << "fib(13)" << std::endl;
+  fib1(13);
+  std::cout << "fib(10)" << std::endl;
+  fib1(10);
+  std::cout << "fib(12)" << std::endl;
+  fib1(12);
+  std::cout << "fib(13)" << std::endl;
+  fib1(13);
+  std::cout << "fib(14)" << std::endl;
+  fib1(14);
+  std::cout << "fib(13)" << std::endl;
+  fib1(13);
   return 0;
 }

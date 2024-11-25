@@ -42,6 +42,9 @@ class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
     if (cache->size() >= capacity_) {
       evict(cache);
     }
+    if (key_iterator_map_.find(key) != key_iterator_map_.end()) {
+      access_order_.erase(key_iterator_map_[key]);
+    }
     (*cache)[key] = value;
     access_order_.push_front(key);
     key_iterator_map_[key] = access_order_.begin();

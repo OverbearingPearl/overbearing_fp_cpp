@@ -25,9 +25,11 @@
 #include <algorithm>
 #include <list>
 #include <memory>
+#include <sstream>
 #include <unordered_map>
 #include <utility>
 
+#include "src/side_effects/io/logging.h"
 #include "src/side_effects/memoization/cache/policy.h"
 
 namespace side_effects {
@@ -37,19 +39,41 @@ namespace cache {
 template <typename KeyType, typename ValueType>
 class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  explicit LFUCachePolicy(size_t capacity) : capacity_(capacity) {}
+  explicit LFUCachePolicy(size_t capacity) : capacity_(capacity) {
+    LOG("LFUCachePolicy capacity: ", capacity_);
+  }
 
   void insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
+    for (const auto& pair : frequency_list_) {
+      LOG("insert()", " capacity: ", capacity_, ", size: ", cache->size(),
+          ", Key: ", std::get<0>(pair.first), ", Frequency: ", pair.second);
+    }
     if (cache->size() >= capacity_) {
       evict(cache);
     }
-    (*cache)[key] = value;
-    frequency_list_[key] = 1;
-    frequency_order_.push_back(key);
+    if (frequency_list_.find(key) != frequency_list_.end()) {
+      touch(key);
+    } else {
+      (*cache)[key] = value;
+      frequency_list_[key] = 1;
+      frequency_order_.push_back(key);
+    }
+    for (const auto& pair : frequency_list_) {
+      LOG("insert()", " capacity: ", capacity_, ", size: ", cache->size(),
+          ", Key: ", std::get<0>(pair.first), ", Frequency: ", pair.second);
+    }
   }
 
  private:
+  void touch(const KeyType& key) {
+    if (frequency_list_.find(key) != frequency_list_.end()) {
+      frequency_list_[key]++;
+      frequency_order_.remove(key);
+      frequency_order_.push_back(key);
+    }
+  }
+
   void evict(Cache<KeyType, ValueType>* cache) {
     auto min_freq_it =
         std::min_element(frequency_list_.begin(), frequency_list_.end(),
@@ -61,6 +85,7 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
     cache->erase(key_to_evict);
     frequency_list_.erase(key_to_evict);
     frequency_order_.remove(key_to_evict);
+    LOG("evict()", " Key: ", std::get<0>(key_to_evict));
   }
 
   size_t capacity_;
