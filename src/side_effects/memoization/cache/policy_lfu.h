@@ -20,42 +20,51 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_LFU_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_LFU_H_
 
-#include <memory>
-#include <tuple>
+#include <list>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/cache/tuple_hash.h"
+#include "src/side_effects/memoization/cache/policy.h"
 
 namespace side_effects {
 namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-using Cache = std::unordered_map<KeyType, std::shared_ptr<ValueType>, TupleHash,
-                                 TupleEqual>;
-
-template <typename KeyType, typename ValueType>
-class CachePolicy {
+class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  virtual void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
-                      std::shared_ptr<ValueType> value) = 0;
-  virtual ~CachePolicy() = default;
-};
+  LFUCachePolicy(size_t capacity) : capacity_(capacity) {}
 
-template <typename KeyType, typename ValueType>
-class DefaultCachePolicy : public CachePolicy<KeyType, ValueType> {
- public:
-  void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
-              std::shared_ptr<ValueType> value) override {
+  void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
+              const KeyType& key, std::shared_ptr<ValueType> value) override {
+    if (cache.size() >= capacity_) {
+      evict(cache);
+    }
     cache[key] = value;
+    frequency_list_[key] = 1;
+    frequency_order_.push_back(key);
   }
+
+ private:
+  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
+    auto min_freq_it = std::min_element(
+        frequency_list_.begin(), frequency_list_.end(),
+        [](const auto& a, const auto& b) { return a.second < b.second; });
+    KeyType key_to_evict = min_freq_it->first;
+    cache.erase(key_to_evict);
+    frequency_list_.erase(key_to_evict);
+    frequency_order_.remove(key_to_evict);
+  }
+
+  size_t capacity_;
+  std::unordered_map<KeyType, size_t> frequency_list_;
+  std::list<KeyType> frequency_order_;
 };
 
 }  // namespace cache
 }  // namespace memoization
 }  // namespace side_effects
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_LFU_H_

@@ -20,8 +20,8 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_TUPLE_HASH_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_TUPLE_HASH_H_
+#ifndef SIDE_EFFECTS_MEMOIZATION_CACHE_TUPLE_HASH_H_
+#define SIDE_EFFECTS_MEMOIZATION_CACHE_TUPLE_HASH_H_
 
 #include <functional>
 #include <tuple>
@@ -80,4 +80,4 @@ struct TupleEqual {
 }  // namespace memoization
 }  // namespace side_effects
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_TUPLE_HASH_H_
+#endif  // SIDE_EFFECTS_MEMOIZATION_CACHE_TUPLE_HASH_H_

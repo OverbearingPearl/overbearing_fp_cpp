@@ -20,14 +20,14 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_RR_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_RR_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_RR_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_RR_H_
 
 #include <cstdlib>
 #include <unordered_map>
 #include <vector>
 
-#include "src/side_effects/memoization/cache/cache.h"
+#include "src/side_effects/memoization/cache/policy.h"
 
 namespace side_effects {
 namespace memoization {
@@ -63,4 +63,4 @@ class RRCachePolicy : public CachePolicy<KeyType, ValueType> {
 }  // namespace memoization
 }  // namespace side_effects
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_RR_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_RR_H_

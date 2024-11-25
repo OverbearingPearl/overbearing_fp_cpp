@@ -20,45 +20,51 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_FIFO_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_FIFO_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_TTL_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_TTL_H_
 
-#include <queue>
+#include <chrono>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/cache/cache.h"
+#include "src/side_effects/memoization/cache/policy.h"
 
 namespace side_effects {
 namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
+class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  FIFOCachePolicy(size_t capacity) : capacity_(capacity) {}
+  TTLCachePolicy(std::chrono::milliseconds ttl) : ttl_(ttl) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
-    if (cache.size() >= capacity_) {
-      evict(cache);
-    }
+    auto now = std::chrono::steady_clock::now();
     cache[key] = value;
-    order_.push(key);
+    timestamps_[key] = now;
+    cleanUp(cache);
   }
 
  private:
-  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
-    KeyType key_to_evict = order_.front();
-    cache.erase(key_to_evict);
-    order_.pop();
+  void cleanUp(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
+    auto now = std::chrono::steady_clock::now();
+    for (auto it = timestamps_.begin(); it != timestamps_.end();) {
+      if (now - it->second > ttl_) {
+        cache.erase(it->first);
+        it = timestamps_.erase(it);
+      } else {
+        ++it;
+      }
+    }
   }
 
-  size_t capacity_;
-  std::queue<KeyType> order_;
+  std::chrono::milliseconds ttl_;
+  std::unordered_map<KeyType, std::chrono::steady_clock::time_point>
+      timestamps_;
 };
 
 }  // namespace cache
 }  // namespace memoization
 }  // namespace side_effects
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_FIFO_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_TTL_H_

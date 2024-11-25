@@ -20,51 +20,49 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_TTL_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_TTL_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_LRU_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_LRU_H_
 
-#include <chrono>
+#include <list>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/cache/cache.h"
+#include "src/side_effects/memoization/cache/policy.h"
 
 namespace side_effects {
 namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
+class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  TTLCachePolicy(std::chrono::milliseconds ttl) : ttl_(ttl) {}
+  LRUCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
-    auto now = std::chrono::steady_clock::now();
+    if (cache.size() >= capacity_) {
+      evict(cache);
+    }
     cache[key] = value;
-    timestamps_[key] = now;
-    cleanUp(cache);
+    access_order_.push_front(key);
+    key_iterator_map_[key] = access_order_.begin();
   }
 
  private:
-  void cleanUp(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
-    auto now = std::chrono::steady_clock::now();
-    for (auto it = timestamps_.begin(); it != timestamps_.end();) {
-      if (now - it->second > ttl_) {
-        cache.erase(it->first);
-        it = timestamps_.erase(it);
-      } else {
-        ++it;
-      }
-    }
+  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
+    KeyType key_to_evict = access_order_.back();
+    cache.erase(key_to_evict);
+    key_iterator_map_.erase(key_to_evict);
+    access_order_.pop_back();
   }
 
-  std::chrono::milliseconds ttl_;
-  std::unordered_map<KeyType, std::chrono::steady_clock::time_point>
-      timestamps_;
+  size_t capacity_;
+  std::list<KeyType> access_order_;
+  std::unordered_map<KeyType, typename std::list<KeyType>::iterator>
+      key_iterator_map_;
 };
 
 }  // namespace cache
 }  // namespace memoization
 }  // namespace side_effects
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_TTL_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_LRU_H_

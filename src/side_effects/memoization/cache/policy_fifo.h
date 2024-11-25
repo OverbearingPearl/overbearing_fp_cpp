@@ -20,22 +20,22 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_LFU_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_LFU_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_FIFO_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_FIFO_H_
 
-#include <list>
+#include <queue>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/cache/cache.h"
+#include "src/side_effects/memoization/cache/policy.h"
 
 namespace side_effects {
 namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
+class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  LFUCachePolicy(size_t capacity) : capacity_(capacity) {}
+  FIFOCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
@@ -43,28 +43,22 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
       evict(cache);
     }
     cache[key] = value;
-    frequency_list_[key] = 1;
-    frequency_order_.push_back(key);
+    order_.push(key);
   }
 
  private:
   void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
-    auto min_freq_it = std::min_element(
-        frequency_list_.begin(), frequency_list_.end(),
-        [](const auto& a, const auto& b) { return a.second < b.second; });
-    KeyType key_to_evict = min_freq_it->first;
+    KeyType key_to_evict = order_.front();
     cache.erase(key_to_evict);
-    frequency_list_.erase(key_to_evict);
-    frequency_order_.remove(key_to_evict);
+    order_.pop();
   }
 
   size_t capacity_;
-  std::unordered_map<KeyType, size_t> frequency_list_;
-  std::list<KeyType> frequency_order_;
+  std::queue<KeyType> order_;
 };
 
 }  // namespace cache
 }  // namespace memoization
 }  // namespace side_effects
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHE_LFU_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_FIFO_H_
