@@ -22,9 +22,30 @@
 
 #pragma once
 
-#ifdef LOGGING_ENABLED
 #include <iostream>
-#define LOG(msg) std::cout << msg << std::endl
+#include <sstream>
+#include <utility>
+
+template <typename T>
+void log_helper(std::ostringstream& oss, T&& arg) {
+  oss << std::forward<T>(arg);
+}
+
+template <typename T, typename... Args>
+void log_helper(std::ostringstream& oss, T&& arg, Args&&... args) {
+  oss << std::forward<T>(arg);
+  log_helper(oss, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void log_impl(Args&&... args) {
+  std::ostringstream oss;
+  log_helper(oss, std::forward<Args>(args)...);
+  std::cout << oss.str() << std::endl;
+}
+
+#ifdef LOGGING_ENABLED
+#define LOG(...) log_impl(__VA_ARGS__)
 #else
-#define LOG(msg)
+#define LOG(...)
 #endif
