@@ -47,9 +47,9 @@ class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
   }
 
  private:
-  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
+  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>* cache) {
     KeyType key_to_evict = order_.front();
-    cache.erase(key_to_evict);
+    cache->erase(key_to_evict);
     order_.pop();
   }
 

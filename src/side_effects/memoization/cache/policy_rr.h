@@ -41,17 +41,17 @@ class RRCachePolicy : public CachePolicy<KeyType, ValueType> {
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
     if (cache.size() >= capacity_) {
-      evict(cache);
+      evict(&cache);
     }
     cache[key] = value;
     keys_.push_back(key);
   }
 
  private:
-  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
+  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>* cache) {
     size_t index = std::rand() % keys_.size();
     KeyType key_to_evict = keys_[index];
-    cache.erase(key_to_evict);
+    cache->erase(key_to_evict);
     keys_.erase(keys_.begin() + index);
   }
 

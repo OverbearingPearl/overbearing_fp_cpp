@@ -39,7 +39,7 @@ using Cache = std::unordered_map<KeyType, std::shared_ptr<ValueType>, TupleHash,
 template <typename KeyType, typename ValueType>
 class CachePolicy {
  public:
-  virtual void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
+  virtual void insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
                       std::shared_ptr<ValueType> value) = 0;
   virtual ~CachePolicy() = default;
 };
@@ -47,9 +47,9 @@ class CachePolicy {
 template <typename KeyType, typename ValueType>
 class DefaultCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
+  void insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
-    cache[key] = value;
+    (*cache)[key] = value;
   }
 };
 

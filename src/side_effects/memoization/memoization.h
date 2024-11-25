@@ -73,7 +73,8 @@ class Memoization {
       if (it == cache_.end()) {
         LOG("Cache miss");
         ResultType result = func_(args...);
-        cache_policy_.insert(cache_, key, std::make_shared<ResultType>(result));
+        cache_policy_.insert(&cache_, key,
+                             std::make_shared<ResultType>(result));
         return result;
       }
       LOG("Cache hit");

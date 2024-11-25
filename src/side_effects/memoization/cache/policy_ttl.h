@@ -42,11 +42,11 @@ class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
     auto now = std::chrono::steady_clock::now();
     cache[key] = value;
     timestamps_[key] = now;
-    cleanUp(cache);
+    cleanUp(&cache);
   }
 
  private:
-  void cleanUp(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
+  void cleanUp(std::unordered_map<KeyType, std::shared_ptr<ValueType>>* cache) {
     auto now = std::chrono::steady_clock::now();
     for (auto it = timestamps_.begin(); it != timestamps_.end();) {
       if (now - it->second > ttl_) {

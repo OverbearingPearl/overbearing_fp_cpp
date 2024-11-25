@@ -40,7 +40,7 @@ class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
     if (cache.size() >= capacity_) {
-      evict(cache);
+      evict(&cache);
     }
     cache[key] = value;
     access_order_.push_front(key);
@@ -48,9 +48,9 @@ class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
   }
 
  private:
-  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
+  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>* cache) {
     KeyType key_to_evict = access_order_.back();
-    cache.erase(key_to_evict);
+    cache->erase(key_to_evict);
     key_iterator_map_.erase(key_to_evict);
     access_order_.pop_back();
   }
