@@ -26,6 +26,10 @@
 #include <functional>
 #include <tuple>
 
+namespace side_effects {
+namespace memoization {
+namespace cache {
+
 struct TupleHash {
   template <typename... Args>
   std::size_t operator()(const std::tuple<Args...>& t) const {
@@ -71,5 +75,9 @@ struct TupleEqual {
     return t1 == t2;
   }
 };
+
+}  // namespace cache
+}  // namespace memoization
+}  // namespace side_effects
 
 #endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_TUPLE_HASH_H_

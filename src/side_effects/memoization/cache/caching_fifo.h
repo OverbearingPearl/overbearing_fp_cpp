@@ -28,6 +28,10 @@
 
 #include "src/side_effects/memoization/cache/caching.h"
 
+namespace side_effects {
+namespace memoization {
+namespace cache {
+
 template <typename KeyType, typename ValueType>
 class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
@@ -52,5 +56,9 @@ class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
   size_t capacity_;
   std::queue<KeyType> order_;
 };
+
+}  // namespace cache
+}  // namespace memoization
+}  // namespace side_effects
 
 #endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_FIFO_H_

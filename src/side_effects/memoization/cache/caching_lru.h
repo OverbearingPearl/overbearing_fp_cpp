@@ -28,6 +28,10 @@
 
 #include "src/side_effects/memoization/cache/caching.h"
 
+namespace side_effects {
+namespace memoization {
+namespace cache {
+
 template <typename KeyType, typename ValueType>
 class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
@@ -56,5 +60,9 @@ class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
   std::unordered_map<KeyType, typename std::list<KeyType>::iterator>
       key_iterator_map_;
 };
+
+}  // namespace cache
+}  // namespace memoization
+}  // namespace side_effects
 
 #endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_LRU_H_

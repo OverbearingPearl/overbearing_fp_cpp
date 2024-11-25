@@ -28,6 +28,10 @@
 
 #include "src/side_effects/memoization/cache/caching.h"
 
+namespace side_effects {
+namespace memoization {
+namespace cache {
+
 template <typename KeyType, typename ValueType>
 class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
@@ -58,5 +62,9 @@ class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
   std::unordered_map<KeyType, std::chrono::steady_clock::time_point>
       timestamps_;
 };
+
+}  // namespace cache
+}  // namespace memoization
+}  // namespace side_effects
 
 #endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_TTL_H_

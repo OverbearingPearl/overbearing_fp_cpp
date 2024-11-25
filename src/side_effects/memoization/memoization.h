@@ -50,7 +50,7 @@ class Memoization {
 
  public:
   template <typename ReturnType, typename... Args,
-            typename CachePolicy =
+            typename CachePolicy = side_effects::memoization::cache::
                 DefaultCachePolicy<std::tuple<Args...>, ReturnType>>
   MemoizedFunc<ReturnType(Args...), CachePolicy> memoize(
       std::function<ReturnType(Args...)> func,
@@ -84,7 +84,8 @@ class Memoization {
    private:
     std::function<ReturnType(Args...)> func_;
     CachePolicy cache_policy_;
-    Cache<std::tuple<Args...>, ReturnType> cache_;
+    side_effects::memoization::cache::Cache<std::tuple<Args...>, ReturnType>
+        cache_;
   };
 };
 

@@ -29,6 +29,10 @@
 
 #include "src/side_effects/memoization/cache/tuple_hash.h"
 
+namespace side_effects {
+namespace memoization {
+namespace cache {
+
 template <typename KeyType, typename ValueType>
 using Cache = std::unordered_map<KeyType, std::shared_ptr<ValueType>, TupleHash,
                                  TupleEqual>;
@@ -49,5 +53,9 @@ class DefaultCachePolicy : public CachePolicy<KeyType, ValueType> {
     cache[key] = value;
   }
 };
+
+}  // namespace cache
+}  // namespace memoization
+}  // namespace side_effects
 
 #endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_H_
