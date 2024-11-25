@@ -34,7 +34,7 @@ namespace cache {
 template <typename KeyType, typename ValueType>
 class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  LRUCachePolicy(size_t capacity) : capacity_(capacity) {}
+  explicit LRUCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {

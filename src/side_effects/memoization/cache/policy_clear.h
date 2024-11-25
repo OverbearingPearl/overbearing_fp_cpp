@@ -33,7 +33,7 @@ namespace cache {
 template <typename KeyType, typename ValueType>
 class ClearCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  ClearCachePolicy(size_t capacity) : capacity_(capacity) {}
+  explicit ClearCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {

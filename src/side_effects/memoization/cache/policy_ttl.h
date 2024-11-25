@@ -34,7 +34,7 @@ namespace cache {
 template <typename KeyType, typename ValueType>
 class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  TTLCachePolicy(std::chrono::milliseconds ttl) : ttl_(ttl) {}
+  explicit TTLCachePolicy(std::chrono::milliseconds ttl) : ttl_(ttl) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
