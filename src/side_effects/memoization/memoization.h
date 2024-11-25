@@ -30,7 +30,7 @@
 #include <utility>
 
 #include "src/side_effects/io/logging.h"
-#include "src/side_effects/memoization/caching.h"
+#include "src/side_effects/memoization/cache/caching.h"
 
 namespace side_effects {
 namespace memoization {

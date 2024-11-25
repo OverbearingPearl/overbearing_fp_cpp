@@ -20,37 +20,34 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_FIFO_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_FIFO_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_H_
 
-#include <queue>
+#include <memory>
+#include <tuple>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/caching.h"
+#include "src/side_effects/memoization/cache/tuple_hash.h"
 
 template <typename KeyType, typename ValueType>
-class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
+using Cache = std::unordered_map<KeyType, std::shared_ptr<ValueType>, TupleHash,
+                                 TupleEqual>;
+
+template <typename KeyType, typename ValueType>
+class CachePolicy {
  public:
-  FIFOCachePolicy(size_t capacity) : capacity_(capacity) {}
-
-  void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
-              const KeyType& key, std::shared_ptr<ValueType> value) override {
-    if (cache.size() >= capacity_) {
-      evict(cache);
-    }
-    cache[key] = value;
-    order_.push(key);
-  }
-
- private:
-  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
-    KeyType key_to_evict = order_.front();
-    cache.erase(key_to_evict);
-    order_.pop();
-  }
-
-  size_t capacity_;
-  std::queue<KeyType> order_;
+  virtual void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
+                      std::shared_ptr<ValueType> value) = 0;
+  virtual ~CachePolicy() = default;
 };
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_FIFO_H_
+template <typename KeyType, typename ValueType>
+class DefaultCachePolicy : public CachePolicy<KeyType, ValueType> {
+ public:
+  void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
+              std::shared_ptr<ValueType> value) override {
+    cache[key] = value;
+  }
+};
+
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_H_

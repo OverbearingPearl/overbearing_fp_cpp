@@ -20,18 +20,18 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_LFU_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_LFU_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_LRU_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_LRU_H_
 
 #include <list>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/caching.h"
+#include "src/side_effects/memoization/cache/caching.h"
 
 template <typename KeyType, typename ValueType>
-class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
+class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  LFUCachePolicy(size_t capacity) : capacity_(capacity) {}
+  LRUCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
@@ -39,24 +39,22 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
       evict(cache);
     }
     cache[key] = value;
-    frequency_list_[key] = 1;
-    frequency_order_.push_back(key);
+    access_order_.push_front(key);
+    key_iterator_map_[key] = access_order_.begin();
   }
 
  private:
   void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
-    auto min_freq_it = std::min_element(
-        frequency_list_.begin(), frequency_list_.end(),
-        [](const auto& a, const auto& b) { return a.second < b.second; });
-    KeyType key_to_evict = min_freq_it->first;
+    KeyType key_to_evict = access_order_.back();
     cache.erase(key_to_evict);
-    frequency_list_.erase(key_to_evict);
-    frequency_order_.remove(key_to_evict);
+    key_iterator_map_.erase(key_to_evict);
+    access_order_.pop_back();
   }
 
   size_t capacity_;
-  std::unordered_map<KeyType, size_t> frequency_list_;
-  std::list<KeyType> frequency_order_;
+  std::list<KeyType> access_order_;
+  std::unordered_map<KeyType, typename std::list<KeyType>::iterator>
+      key_iterator_map_;
 };
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_LFU_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_LRU_H_

@@ -20,34 +20,43 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_TTL_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_TTL_H_
 
-#include <memory>
-#include <tuple>
+#include <chrono>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/tuple_hash.h"
+#include "src/side_effects/memoization/cache/caching.h"
 
 template <typename KeyType, typename ValueType>
-using Cache = std::unordered_map<KeyType, std::shared_ptr<ValueType>, TupleHash,
-                                 TupleEqual>;
-
-template <typename KeyType, typename ValueType>
-class CachePolicy {
+class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  virtual void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
-                      std::shared_ptr<ValueType> value) = 0;
-  virtual ~CachePolicy() = default;
-};
+  TTLCachePolicy(std::chrono::milliseconds ttl) : ttl_(ttl) {}
 
-template <typename KeyType, typename ValueType>
-class DefaultCachePolicy : public CachePolicy<KeyType, ValueType> {
- public:
-  void insert(Cache<KeyType, ValueType>& cache, const KeyType& key,
-              std::shared_ptr<ValueType> value) override {
+  void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
+              const KeyType& key, std::shared_ptr<ValueType> value) override {
+    auto now = std::chrono::steady_clock::now();
     cache[key] = value;
+    timestamps_[key] = now;
+    cleanUp(cache);
   }
+
+ private:
+  void cleanUp(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
+    auto now = std::chrono::steady_clock::now();
+    for (auto it = timestamps_.begin(); it != timestamps_.end();) {
+      if (now - it->second > ttl_) {
+        cache.erase(it->first);
+        it = timestamps_.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+
+  std::chrono::milliseconds ttl_;
+  std::unordered_map<KeyType, std::chrono::steady_clock::time_point>
+      timestamps_;
 };
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_TTL_H_

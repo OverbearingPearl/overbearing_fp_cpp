@@ -20,18 +20,19 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_LRU_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_LRU_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_RR_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_RR_H_
 
-#include <list>
+#include <cstdlib>
 #include <unordered_map>
+#include <vector>
 
-#include "src/side_effects/memoization/caching.h"
+#include "src/side_effects/memoization/cache/caching.h"
 
 template <typename KeyType, typename ValueType>
-class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
+class RRCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  LRUCachePolicy(size_t capacity) : capacity_(capacity) {}
+  RRCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
@@ -39,22 +40,19 @@ class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
       evict(cache);
     }
     cache[key] = value;
-    access_order_.push_front(key);
-    key_iterator_map_[key] = access_order_.begin();
+    keys_.push_back(key);
   }
 
  private:
   void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
-    KeyType key_to_evict = access_order_.back();
+    size_t index = std::rand() % keys_.size();
+    KeyType key_to_evict = keys_[index];
     cache.erase(key_to_evict);
-    key_iterator_map_.erase(key_to_evict);
-    access_order_.pop_back();
+    keys_.erase(keys_.begin() + index);
   }
 
   size_t capacity_;
-  std::list<KeyType> access_order_;
-  std::unordered_map<KeyType, typename std::list<KeyType>::iterator>
-      key_iterator_map_;
+  std::vector<KeyType> keys_;
 };
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_LRU_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_RR_H_

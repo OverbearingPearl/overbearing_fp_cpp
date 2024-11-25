@@ -20,43 +20,37 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_TTL_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_TTL_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_FIFO_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_FIFO_H_
 
-#include <chrono>
+#include <queue>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/caching.h"
+#include "src/side_effects/memoization/cache/caching.h"
 
 template <typename KeyType, typename ValueType>
-class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
+class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  TTLCachePolicy(std::chrono::milliseconds ttl) : ttl_(ttl) {}
+  FIFOCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
-    auto now = std::chrono::steady_clock::now();
+    if (cache.size() >= capacity_) {
+      evict(cache);
+    }
     cache[key] = value;
-    timestamps_[key] = now;
-    cleanUp(cache);
+    order_.push(key);
   }
 
  private:
-  void cleanUp(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
-    auto now = std::chrono::steady_clock::now();
-    for (auto it = timestamps_.begin(); it != timestamps_.end();) {
-      if (now - it->second > ttl_) {
-        cache.erase(it->first);
-        it = timestamps_.erase(it);
-      } else {
-        ++it;
-      }
-    }
+  void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
+    KeyType key_to_evict = order_.front();
+    cache.erase(key_to_evict);
+    order_.pop();
   }
 
-  std::chrono::milliseconds ttl_;
-  std::unordered_map<KeyType, std::chrono::steady_clock::time_point>
-      timestamps_;
+  size_t capacity_;
+  std::queue<KeyType> order_;
 };
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_TTL_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_FIFO_H_

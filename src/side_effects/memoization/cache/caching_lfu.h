@@ -20,19 +20,18 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_RR_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_RR_H_
+#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_LFU_H_
+#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_LFU_H_
 
-#include <cstdlib>
+#include <list>
 #include <unordered_map>
-#include <vector>
 
-#include "src/side_effects/memoization/caching.h"
+#include "src/side_effects/memoization/cache/caching.h"
 
 template <typename KeyType, typename ValueType>
-class RRCachePolicy : public CachePolicy<KeyType, ValueType> {
+class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  RRCachePolicy(size_t capacity) : capacity_(capacity) {}
+  LFUCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void insert(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache,
               const KeyType& key, std::shared_ptr<ValueType> value) override {
@@ -40,19 +39,24 @@ class RRCachePolicy : public CachePolicy<KeyType, ValueType> {
       evict(cache);
     }
     cache[key] = value;
-    keys_.push_back(key);
+    frequency_list_[key] = 1;
+    frequency_order_.push_back(key);
   }
 
  private:
   void evict(std::unordered_map<KeyType, std::shared_ptr<ValueType>>& cache) {
-    size_t index = std::rand() % keys_.size();
-    KeyType key_to_evict = keys_[index];
+    auto min_freq_it = std::min_element(
+        frequency_list_.begin(), frequency_list_.end(),
+        [](const auto& a, const auto& b) { return a.second < b.second; });
+    KeyType key_to_evict = min_freq_it->first;
     cache.erase(key_to_evict);
-    keys_.erase(keys_.begin() + index);
+    frequency_list_.erase(key_to_evict);
+    frequency_order_.remove(key_to_evict);
   }
 
   size_t capacity_;
-  std::vector<KeyType> keys_;
+  std::unordered_map<KeyType, size_t> frequency_list_;
+  std::list<KeyType> frequency_order_;
 };
 
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHING_RR_H_
+#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_CACHING_LFU_H_
