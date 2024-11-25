@@ -7,5 +7,3 @@ if (TEST_SOURCES)
   target_link_libraries(runTests gtest gtest_main)
   add_test(NAME runTests COMMAND runTests)
 endif()
-
-enable_testing()
