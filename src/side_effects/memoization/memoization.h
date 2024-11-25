@@ -20,8 +20,7 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_MEMOIZATION_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_MEMOIZATION_H_
+#pragma once
 
 #include <functional>
 #include <memory>
@@ -91,5 +90,3 @@ class Memoization {
 
 }  // namespace memoization
 }  // namespace side_effects
-
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_MEMOIZATION_H_

@@ -20,8 +20,7 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_TTL_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_TTL_H_
+#pragma once
 
 #include <chrono>
 #include <unordered_map>
@@ -66,5 +65,3 @@ class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
 }  // namespace cache
 }  // namespace memoization
 }  // namespace side_effects
-
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_TTL_H_

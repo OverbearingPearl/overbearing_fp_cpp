@@ -20,8 +20,7 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_H_
+#pragma once
 
 #include <memory>
 #include <tuple>
@@ -57,5 +56,3 @@ class DefaultCachePolicy : public CachePolicy<KeyType, ValueType> {
 }  // namespace cache
 }  // namespace memoization
 }  // namespace side_effects
-
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_H_

@@ -20,8 +20,7 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_IO_LOGGING_H_
-#define SRC_SIDE_EFFECTS_IO_LOGGING_H_
+#pragma once
 
 #ifdef LOGGING_ENABLED
 #include <iostream>
@@ -29,5 +28,3 @@
 #else
 #define LOG(msg)
 #endif
-
-#endif  // SRC_SIDE_EFFECTS_IO_LOGGING_H_

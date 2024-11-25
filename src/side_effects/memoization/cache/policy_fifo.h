@@ -20,8 +20,7 @@
  SOFTWARE.
  */
 
-#ifndef SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_FIFO_H_
-#define SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_FIFO_H_
+#pragma once
 
 #include <queue>
 #include <unordered_map>
@@ -60,5 +59,3 @@ class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
 }  // namespace cache
 }  // namespace memoization
 }  // namespace side_effects
-
-#endif  // SRC_SIDE_EFFECTS_MEMOIZATION_CACHE_POLICY_FIFO_H_

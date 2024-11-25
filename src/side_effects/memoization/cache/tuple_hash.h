@@ -20,8 +20,7 @@
  SOFTWARE.
  */
 
-#ifndef SIDE_EFFECTS_MEMOIZATION_CACHE_TUPLE_HASH_H_
-#define SIDE_EFFECTS_MEMOIZATION_CACHE_TUPLE_HASH_H_
+#pragma once
 
 #include <functional>
 #include <tuple>
@@ -79,5 +78,3 @@ struct TupleEqual {
 }  // namespace cache
 }  // namespace memoization
 }  // namespace side_effects
-
-#endif  // SIDE_EFFECTS_MEMOIZATION_CACHE_TUPLE_HASH_H_
