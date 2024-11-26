@@ -36,32 +36,32 @@ namespace side_effects {
 namespace memoization {
 
 template <typename Func>
-struct function_traits;
+struct FunctionTraits;
 
 template <typename ReturnType, typename... Args>
-struct function_traits<std::function<ReturnType(Args...)>> {
+struct FunctionTraits<std::function<ReturnType(Args...)>> {
   using result_type = ReturnType;
   using arg_tuple_type = std::tuple<Args...>;
 };
 
 template <typename ReturnType, typename ClassType, typename... Args>
-struct function_traits<ReturnType (ClassType::*)(Args...)> {
+struct FunctionTraits<ReturnType (ClassType::*)(Args...)> {
   using result_type = ReturnType;
   using arg_tuple_type = std::tuple<ClassType*, Args...>;
 };
 
 template <typename Func>
-struct default_cache_policy;
+struct DefaultCachePolicy;
 
 template <typename ReturnType, typename... Args>
-struct default_cache_policy<std::function<ReturnType(Args...)>> {
+struct DefaultCachePolicy<std::function<ReturnType(Args...)>> {
   using type =
       side_effects::memoization::cache::DefaultCachePolicy<std::tuple<Args...>,
                                                            ReturnType>;
 };
 
 template <typename ReturnType, typename ClassType, typename... Args>
-struct default_cache_policy<std::function<ReturnType(ClassType*, Args...)>> {
+struct DefaultCachePolicy<std::function<ReturnType(ClassType*, Args...)>> {
   using type = side_effects::memoization::cache::DefaultCachePolicy<
       std::tuple<ClassType*, Args...>, ReturnType>;
 };
@@ -72,14 +72,14 @@ class Memoization {
 
  public:
   template <typename Func,
-            typename CachePolicy = typename default_cache_policy<Func>::type>
+            typename CachePolicy = typename DefaultCachePolicy<Func>::type>
   MemoizedFunc<Func, CachePolicy> Memoize(
       Func func, CachePolicy cache_policy = CachePolicy()) {
     return MemoizedFunc<Func, CachePolicy>(func, cache_policy);
   }
 
   template <typename ReturnType, typename ClassType, typename... Args,
-            typename CachePolicy = typename default_cache_policy<
+            typename CachePolicy = typename DefaultCachePolicy<
                 std::function<ReturnType(ClassType*, Args...)>>::type>
   MemoizedFunc<std::function<ReturnType(ClassType*, Args...)>, CachePolicy>
   Memoize(ReturnType (ClassType::*func)(Args...),
@@ -93,8 +93,8 @@ class Memoization {
  private:
   template <typename Func, typename CachePolicy>
   struct MemoizedFunc {
-    using ReturnType = typename function_traits<Func>::result_type;
-    using ArgTupleType = typename function_traits<Func>::arg_tuple_type;
+    using ReturnType = typename FunctionTraits<Func>::result_type;
+    using ArgTupleType = typename FunctionTraits<Func>::arg_tuple_type;
 
     explicit MemoizedFunc(Func func, CachePolicy cache_policy = CachePolicy())
         : func_(func),
