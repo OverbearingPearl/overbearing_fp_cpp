@@ -31,20 +31,19 @@ TEST(Memoization, LfuCache_CaclulateFibonacciOnce_Normally) {
   side_effects::memoization::Memoization memoization;
   auto lfu_policy =
       side_effects::memoization::cache::LFUCachePolicy<std::tuple<int>, int>(4);
-  auto fib =
-      memoization.memoize<int, int>(std::function<int(int)>([](int n) -> int {
-                                      if (n < 2) {
-                                        return n;
-                                      }
-                                      int a = 0, b = 1, c;
-                                      for (int i = 2; i <= n; ++i) {
-                                        c = a + b;
-                                        a = b;
-                                        b = c;
-                                      }
-                                      return b;
-                                    }),
-                                    lfu_policy);
+  auto fib = memoization.memoize(std::function<int(int)>([](int n) -> int {
+                                   if (n < 2) {
+                                     return n;
+                                   }
+                                   int a = 0, b = 1, c;
+                                   for (int i = 2; i <= n; ++i) {
+                                     c = a + b;
+                                     a = b;
+                                     b = c;
+                                   }
+                                   return b;
+                                 }),
+                                 lfu_policy);
 
   SCOPED_TRACE("Testing fib(10)");
   EXPECT_EQ(fib(10), 55);
@@ -54,20 +53,19 @@ TEST(Memoization, LfuCache_CalculateFibonacciMultiply_Normally) {
   side_effects::memoization::Memoization memoization;
   auto lfu_policy =
       side_effects::memoization::cache::LFUCachePolicy<std::tuple<int>, int>(4);
-  auto fib =
-      memoization.memoize<int, int>(std::function<int(int)>([](int n) -> int {
-                                      if (n < 2) {
-                                        return n;
-                                      }
-                                      int a = 0, b = 1, c;
-                                      for (int i = 2; i <= n; ++i) {
-                                        c = a + b;
-                                        a = b;
-                                        b = c;
-                                      }
-                                      return b;
-                                    }),
-                                    lfu_policy);
+  auto fib = memoization.memoize(std::function<int(int)>([](int n) -> int {
+                                   if (n < 2) {
+                                     return n;
+                                   }
+                                   int a = 0, b = 1, c;
+                                   for (int i = 2; i <= n; ++i) {
+                                     c = a + b;
+                                     a = b;
+                                     b = c;
+                                   }
+                                   return b;
+                                 }),
+                                 lfu_policy);
 
   SCOPED_TRACE("Testing fib(10)");
   EXPECT_EQ(fib(10), 55);

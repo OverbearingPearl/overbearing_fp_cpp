@@ -44,40 +44,64 @@ struct function_traits<std::function<ReturnType(Args...)>> {
   using arg_tuple_type = std::tuple<Args...>;
 };
 
+template <typename ReturnType, typename ClassType, typename... Args>
+struct function_traits<ReturnType (ClassType::*)(Args...)> {
+  using result_type = ReturnType;
+  using arg_tuple_type = std::tuple<ClassType*, Args...>;
+};
+
+template <typename Func>
+struct default_cache_policy;
+
+template <typename ReturnType, typename... Args>
+struct default_cache_policy<std::function<ReturnType(Args...)>> {
+  using type =
+      side_effects::memoization::cache::DefaultCachePolicy<std::tuple<Args...>,
+                                                           ReturnType>;
+};
+
+template <typename ReturnType, typename ClassType, typename... Args>
+struct default_cache_policy<std::function<ReturnType(ClassType*, Args...)>> {
+  using type = side_effects::memoization::cache::DefaultCachePolicy<
+      std::tuple<ClassType*, Args...>, ReturnType>;
+};
+
 class Memoization {
   template <typename Func, typename CachePolicy>
   struct MemoizedFunc;
 
  public:
-  template <typename ReturnType, typename... Args,
-            typename CachePolicy = side_effects::memoization::cache::
-                DefaultCachePolicy<std::tuple<Args...>, ReturnType>>
-  MemoizedFunc<ReturnType(Args...), CachePolicy> memoize(
-      std::function<ReturnType(Args...)> func,
-      CachePolicy cache_policy = CachePolicy()) {
-    return MemoizedFunc<ReturnType(Args...), CachePolicy>(func, cache_policy);
+  template <typename Func,
+            typename CachePolicy = typename default_cache_policy<Func>::type>
+  MemoizedFunc<Func, CachePolicy> memoize(
+      Func func, CachePolicy cache_policy = CachePolicy()) {
+    return MemoizedFunc<Func, CachePolicy>(func, cache_policy);
   }
 
   template <typename ReturnType, typename ClassType, typename... Args,
-            typename CachePolicy = side_effects::memoization::cache::
-                DefaultCachePolicy<std::tuple<ClassType*, Args...>, ReturnType>>
-  MemoizedFunc<ReturnType(ClassType*, Args...), CachePolicy> memoize(
-      ReturnType (ClassType::*func)(Args...),
-      CachePolicy cache_policy = CachePolicy()) {
-    return MemoizedFunc<ReturnType(ClassType*, Args...), CachePolicy>(
+            typename CachePolicy = typename default_cache_policy<
+                std::function<ReturnType(ClassType*, Args...)>>::type>
+  MemoizedFunc<std::function<ReturnType(ClassType*, Args...)>, CachePolicy>
+  memoize(ReturnType (ClassType::*func)(Args...),
+          CachePolicy cache_policy = CachePolicy()) {
+    return MemoizedFunc<std::function<ReturnType(ClassType*, Args...)>,
+                        CachePolicy>(
         [func](ClassType* obj, Args... args) { return (obj->*func)(args...); },
         cache_policy);
   }
 
  private:
-  template <typename ReturnType, typename... Args, typename CachePolicy>
-  struct MemoizedFunc<ReturnType(Args...), CachePolicy> {
-    MemoizedFunc(std::function<ReturnType(Args...)> func,
-                 CachePolicy cache_policy = CachePolicy())
+  template <typename Func, typename CachePolicy>
+  struct MemoizedFunc {
+    using ReturnType = typename function_traits<Func>::result_type;
+    using ArgTupleType = typename function_traits<Func>::arg_tuple_type;
+
+    MemoizedFunc(Func func, CachePolicy cache_policy = CachePolicy())
         : func_(func),
           cache_policy_(cache_policy),
           mutex_(std::make_shared<std::mutex>()) {}
 
+    template <typename... Args>
     ReturnType operator()(Args... args) {
       std::lock_guard<std::mutex> lock(*mutex_);
 
@@ -100,49 +124,9 @@ class Memoization {
     }
 
    private:
-    std::function<ReturnType(Args...)> func_;
+    Func func_;
     CachePolicy cache_policy_;
-    side_effects::memoization::cache::Cache<std::tuple<Args...>, ReturnType>
-        cache_;
-    std::shared_ptr<std::mutex> mutex_;
-  };
-
-  template <typename ReturnType, typename ClassType, typename... Args,
-            typename CachePolicy>
-  struct MemoizedFunc<ReturnType(ClassType*, Args...), CachePolicy> {
-    MemoizedFunc(std::function<ReturnType(ClassType*, Args...)> func,
-                 CachePolicy cache_policy = CachePolicy())
-        : func_(func),
-          cache_policy_(cache_policy),
-          mutex_(std::make_shared<std::mutex>()) {}
-
-    ReturnType operator()(ClassType* obj, Args... args) {
-      std::lock_guard<std::mutex> lock(*mutex_);
-
-      using KeyType = std::tuple<ClassType*, Args...>;
-      using ResultType = ReturnType;
-
-      KeyType key = std::make_tuple(obj, args...);
-      auto it = cache_.find(key);
-      if (it == cache_.end()) {
-        LOG("Cache miss");
-        ResultType result = func_(obj, args...);
-        cache_policy_.insert(&cache_, key,
-                             std::make_shared<ResultType>(result));
-        return result;
-      }
-      LOG("Cache hit");
-      const auto value = it->second;
-      cache_policy_.insert(&cache_, key, value);
-      return *std::static_pointer_cast<ResultType>(value);
-    }
-
-   private:
-    std::function<ReturnType(ClassType*, Args...)> func_;
-    CachePolicy cache_policy_;
-    side_effects::memoization::cache::Cache<std::tuple<ClassType*, Args...>,
-                                            ReturnType>
-        cache_;
+    side_effects::memoization::cache::Cache<ArgTupleType, ReturnType> cache_;
     std::shared_ptr<std::mutex> mutex_;
   };
 };
