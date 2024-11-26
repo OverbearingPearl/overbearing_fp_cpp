@@ -96,7 +96,7 @@ class Memoization {
     using ReturnType = typename function_traits<Func>::result_type;
     using ArgTupleType = typename function_traits<Func>::arg_tuple_type;
 
-    MemoizedFunc(Func func, CachePolicy cache_policy = CachePolicy())
+    explicit MemoizedFunc(Func func, CachePolicy cache_policy = CachePolicy())
         : func_(func),
           cache_policy_(cache_policy),
           mutex_(std::make_shared<std::mutex>()) {}
