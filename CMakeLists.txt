@@ -24,7 +24,6 @@ elseif(UNIX)
 endif()
 
 enable_testing()
-
 set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "")
 add_subdirectory(third_party/googletest)
 
