@@ -58,6 +58,17 @@ class Memoization {
     return MemoizedFunc<ReturnType(Args...), CachePolicy>(func, cache_policy);
   }
 
+  template <typename ReturnType, typename ClassType, typename... Args,
+            typename CachePolicy = side_effects::memoization::cache::
+                DefaultCachePolicy<std::tuple<ClassType*, Args...>, ReturnType>>
+  MemoizedFunc<ReturnType(ClassType*, Args...), CachePolicy> memoize(
+      ReturnType (ClassType::*func)(Args...),
+      CachePolicy cache_policy = CachePolicy()) {
+    return MemoizedFunc<ReturnType(ClassType*, Args...), CachePolicy>(
+        [func](ClassType* obj, Args... args) { return (obj->*func)(args...); },
+        cache_policy);
+  }
+
  private:
   template <typename ReturnType, typename... Args, typename CachePolicy>
   struct MemoizedFunc<ReturnType(Args...), CachePolicy> {
@@ -92,6 +103,45 @@ class Memoization {
     std::function<ReturnType(Args...)> func_;
     CachePolicy cache_policy_;
     side_effects::memoization::cache::Cache<std::tuple<Args...>, ReturnType>
+        cache_;
+    std::shared_ptr<std::mutex> mutex_;
+  };
+
+  template <typename ReturnType, typename ClassType, typename... Args,
+            typename CachePolicy>
+  struct MemoizedFunc<ReturnType(ClassType*, Args...), CachePolicy> {
+    MemoizedFunc(std::function<ReturnType(ClassType*, Args...)> func,
+                 CachePolicy cache_policy = CachePolicy())
+        : func_(func),
+          cache_policy_(cache_policy),
+          mutex_(std::make_shared<std::mutex>()) {}
+
+    ReturnType operator()(ClassType* obj, Args... args) {
+      std::lock_guard<std::mutex> lock(*mutex_);
+
+      using KeyType = std::tuple<ClassType*, Args...>;
+      using ResultType = ReturnType;
+
+      KeyType key = std::make_tuple(obj, args...);
+      auto it = cache_.find(key);
+      if (it == cache_.end()) {
+        LOG("Cache miss");
+        ResultType result = func_(obj, args...);
+        cache_policy_.insert(&cache_, key,
+                             std::make_shared<ResultType>(result));
+        return result;
+      }
+      LOG("Cache hit");
+      const auto value = it->second;
+      cache_policy_.insert(&cache_, key, value);
+      return *std::static_pointer_cast<ResultType>(value);
+    }
+
+   private:
+    std::function<ReturnType(ClassType*, Args...)> func_;
+    CachePolicy cache_policy_;
+    side_effects::memoization::cache::Cache<std::tuple<ClassType*, Args...>,
+                                            ReturnType>
         cache_;
     std::shared_ptr<std::mutex> mutex_;
   };

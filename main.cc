@@ -22,9 +22,26 @@
 
 #include <functional>
 #include <iostream>
+#include <tuple>
 
 #include "src/side_effects/memoization/cache/policy_lfu.h"
 #include "src/side_effects/memoization/memoization.h"
+
+class Fibonacci {
+ public:
+  int compute(int n) {
+    if (n < 2) {
+      return n;
+    }
+    int a = 0, b = 1, c;
+    for (int i = 2; i <= n; ++i) {
+      c = a + b;
+      a = b;
+      b = c;
+    }
+    return b;
+  }
+};
 
 int main() {
   side_effects::memoization::Memoization memoization;
@@ -58,7 +75,13 @@ int main() {
                                       return b;
                                     }),
                                     lfu_policy);
-  int result = fib(10);
+  Fibonacci fibObj;
+  auto memoizedFib = memoization.memoize(
+      &Fibonacci::compute, side_effects::memoization::cache::LFUCachePolicy<
+                               std::tuple<Fibonacci*, int>, int>(4));
+  int result = memoizedFib(&fibObj, 10);
+  std::cout << "Memoized Fibonacci of 10 is " << result << std::endl;
+  result = fib(10);
   fib(10);
   fib(11);
   std::cout << "Fibonacci of 10 is " << result << std::endl;
