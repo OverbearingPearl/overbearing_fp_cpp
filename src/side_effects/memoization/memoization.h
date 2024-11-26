@@ -24,6 +24,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
@@ -62,9 +63,13 @@ class Memoization {
   struct MemoizedFunc<ReturnType(Args...), CachePolicy> {
     MemoizedFunc(std::function<ReturnType(Args...)> func,
                  CachePolicy cache_policy = CachePolicy())
-        : func_(func), cache_policy_(cache_policy) {}
+        : func_(func),
+          cache_policy_(cache_policy),
+          mutex_(std::make_shared<std::mutex>()) {}
 
     ReturnType operator()(Args... args) {
+      std::lock_guard<std::mutex> lock(*mutex_);
+
       using KeyType = std::tuple<Args...>;
       using ResultType = ReturnType;
 
@@ -88,6 +93,7 @@ class Memoization {
     CachePolicy cache_policy_;
     side_effects::memoization::cache::Cache<std::tuple<Args...>, ReturnType>
         cache_;
+    std::shared_ptr<std::mutex> mutex_;
   };
 };
 
