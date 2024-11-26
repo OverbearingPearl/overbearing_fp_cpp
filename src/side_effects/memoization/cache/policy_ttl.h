@@ -37,16 +37,16 @@ class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
   explicit TTLCachePolicy(std::chrono::milliseconds ttl) : ttl_(ttl) {}
 
-  void insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
+  void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
     auto now = std::chrono::steady_clock::now();
     (*cache)[key] = value;
     timestamps_[key] = now;
-    cleanUp(cache);
+    CleanUp(cache);
   }
 
  private:
-  void cleanUp(Cache<KeyType, ValueType>* cache) {
+  void CleanUp(Cache<KeyType, ValueType>* cache) {
     auto now = std::chrono::steady_clock::now();
     for (auto it = timestamps_.begin(); it != timestamps_.end();) {
       if (now - it->second > ttl_) {

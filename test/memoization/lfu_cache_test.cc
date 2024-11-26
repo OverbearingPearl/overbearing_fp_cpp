@@ -31,7 +31,7 @@ TEST(Memoization, LfuCache_CaclulateFibonacciOnce_Normally) {
   side_effects::memoization::Memoization memoization;
   auto lfu_policy =
       side_effects::memoization::cache::LFUCachePolicy<std::tuple<int>, int>(4);
-  auto fib = memoization.memoize(std::function<int(int)>([](int n) -> int {
+  auto fib = memoization.Memoize(std::function<int(int)>([](int n) -> int {
                                    if (n < 2) {
                                      return n;
                                    }
@@ -53,7 +53,7 @@ TEST(Memoization, LfuCache_CalculateFibonacciMultiply_Normally) {
   side_effects::memoization::Memoization memoization;
   auto lfu_policy =
       side_effects::memoization::cache::LFUCachePolicy<std::tuple<int>, int>(4);
-  auto fib = memoization.memoize(std::function<int(int)>([](int n) -> int {
+  auto fib = memoization.Memoize(std::function<int(int)>([](int n) -> int {
                                    if (n < 2) {
                                      return n;
                                    }

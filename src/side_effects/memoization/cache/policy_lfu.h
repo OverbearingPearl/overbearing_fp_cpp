@@ -43,30 +43,30 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
     LOG("LFUCachePolicy capacity: ", capacity_);
   }
 
-  void insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
+  void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
     for (const auto& pair : frequency_list_) {
-      LOG("insert()", " capacity: ", capacity_, ", size: ", cache->size(),
+      LOG("Insert()", " capacity: ", capacity_, ", size: ", cache->size(),
           ", Key: ", std::get<0>(pair.first), ", Frequency: ", pair.second);
     }
     if (cache->size() >= capacity_) {
-      evict(cache);
+      Evict(cache);
     }
     if (frequency_list_.find(key) != frequency_list_.end()) {
-      touch(key);
+      Touch(key);
     } else {
       (*cache)[key] = value;
       frequency_list_[key] = 1;
       frequency_order_.push_back(key);
     }
     for (const auto& pair : frequency_list_) {
-      LOG("insert()", " capacity: ", capacity_, ", size: ", cache->size(),
+      LOG("Insert()", " capacity: ", capacity_, ", size: ", cache->size(),
           ", Key: ", std::get<0>(pair.first), ", Frequency: ", pair.second);
     }
   }
 
  private:
-  void touch(const KeyType& key) {
+  void Touch(const KeyType& key) {
     if (frequency_list_.find(key) != frequency_list_.end()) {
       frequency_list_[key]++;
       frequency_order_.remove(key);
@@ -74,7 +74,7 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
     }
   }
 
-  void evict(Cache<KeyType, ValueType>* cache) {
+  void Evict(Cache<KeyType, ValueType>* cache) {
     auto min_freq_it =
         std::min_element(frequency_list_.begin(), frequency_list_.end(),
                          [](const std::pair<KeyType, size_t>& a,
@@ -85,7 +85,7 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
     cache->erase(key_to_evict);
     frequency_list_.erase(key_to_evict);
     frequency_order_.remove(key_to_evict);
-    LOG("evict()", " Key: ", std::get<0>(key_to_evict));
+    LOG("Evict()", " Key: ", std::get<0>(key_to_evict));
   }
 
   size_t capacity_;

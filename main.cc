@@ -47,7 +47,7 @@ int main() {
   side_effects::memoization::Memoization memoization;
   auto lfu_policy =
       side_effects::memoization::cache::LFUCachePolicy<std::tuple<int>, int>(4);
-  auto fib = memoization.memoize(std::function<int(int)>([](int n) -> int {
+  auto fib = memoization.Memoize(std::function<int(int)>([](int n) -> int {
                                    if (n < 2) {
                                      return n;
                                    }
@@ -61,7 +61,7 @@ int main() {
                                  }),
                                  lfu_policy);
 
-  auto fib1 = memoization.memoize(std::function<int(int)>([](int n) -> int {
+  auto fib1 = memoization.Memoize(std::function<int(int)>([](int n) -> int {
                                     if (n < 2) {
                                       return n;
                                     }
@@ -76,10 +76,10 @@ int main() {
                                   lfu_policy);
 
   Fibonacci fibObj;
-  auto memoizedFib = memoization.memoize(
+  auto memoized_fib = memoization.Memoize(
       &Fibonacci::compute, side_effects::memoization::cache::LFUCachePolicy<
                                std::tuple<Fibonacci*, int>, int>(4));
-  int result = memoizedFib(&fibObj, 10);
+  int result = memoized_fib(&fibObj, 10);
   std::cout << "Memoized Fibonacci of 10 is " << result << std::endl;
   result = fib(10);
   fib(10);

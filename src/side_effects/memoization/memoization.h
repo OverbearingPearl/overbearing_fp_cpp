@@ -73,7 +73,7 @@ class Memoization {
  public:
   template <typename Func,
             typename CachePolicy = typename default_cache_policy<Func>::type>
-  MemoizedFunc<Func, CachePolicy> memoize(
+  MemoizedFunc<Func, CachePolicy> Memoize(
       Func func, CachePolicy cache_policy = CachePolicy()) {
     return MemoizedFunc<Func, CachePolicy>(func, cache_policy);
   }
@@ -82,7 +82,7 @@ class Memoization {
             typename CachePolicy = typename default_cache_policy<
                 std::function<ReturnType(ClassType*, Args...)>>::type>
   MemoizedFunc<std::function<ReturnType(ClassType*, Args...)>, CachePolicy>
-  memoize(ReturnType (ClassType::*func)(Args...),
+  Memoize(ReturnType (ClassType::*func)(Args...),
           CachePolicy cache_policy = CachePolicy()) {
     return MemoizedFunc<std::function<ReturnType(ClassType*, Args...)>,
                         CachePolicy>(
@@ -113,13 +113,13 @@ class Memoization {
       if (it == cache_.end()) {
         LOG("Cache miss");
         ResultType result = func_(args...);
-        cache_policy_.insert(&cache_, key,
+        cache_policy_.Insert(&cache_, key,
                              std::make_shared<ResultType>(result));
         return result;
       }
       LOG("Cache hit");
       const auto value = it->second;
-      cache_policy_.insert(&cache_, key, value);
+      cache_policy_.Insert(&cache_, key, value);
       return *std::static_pointer_cast<ResultType>(value);
     }
 

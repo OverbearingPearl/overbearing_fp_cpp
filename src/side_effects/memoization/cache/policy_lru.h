@@ -37,10 +37,10 @@ class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
   explicit LRUCachePolicy(size_t capacity) : capacity_(capacity) {}
 
-  void insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
+  void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
     if (cache->size() >= capacity_) {
-      evict(cache);
+      Evict(cache);
     }
     if (key_iterator_map_.find(key) != key_iterator_map_.end()) {
       access_order_.erase(key_iterator_map_[key]);
@@ -51,7 +51,7 @@ class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
   }
 
  private:
-  void evict(Cache<KeyType, ValueType>* cache) {
+  void Evict(Cache<KeyType, ValueType>* cache) {
     KeyType key_to_evict = access_order_.back();
     cache->erase(key_to_evict);
     key_iterator_map_.erase(key_to_evict);

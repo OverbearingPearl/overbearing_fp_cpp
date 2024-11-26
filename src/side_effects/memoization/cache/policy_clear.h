@@ -36,7 +36,7 @@ class ClearCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
   explicit ClearCachePolicy(size_t capacity) : capacity_(capacity) {}
 
-  void insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
+  void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
     if (cache->size() >= capacity_) {
       cache->clear();

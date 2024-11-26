@@ -32,7 +32,7 @@ namespace cache {
 struct TupleHash {
   template <typename... Args>
   std::size_t operator()(const std::tuple<Args...>& t) const {
-    return hashTuple(t);
+    return HashTuple(t);
   }
 
  private:
@@ -41,7 +41,7 @@ struct TupleHash {
   struct Hasher {
     std::size_t operator()(const Tuple& t) const {
       std::size_t hash = Hasher<Tuple, Index - 1>()(t);
-      TupleHash::hashCombine(&hash, std::get<Index>(t));
+      TupleHash::HashCombine(&hash, std::get<Index>(t));
       return hash;
     }
   };
@@ -50,18 +50,18 @@ struct TupleHash {
   struct Hasher<Tuple, 0> {
     std::size_t operator()(const Tuple& t) const {
       std::size_t hash = 0;
-      TupleHash::hashCombine(&hash, std::get<0>(t));
+      TupleHash::HashCombine(&hash, std::get<0>(t));
       return hash;
     }
   };
 
   template <typename Tuple>
-  std::size_t hashTuple(const Tuple& t) const {
+  std::size_t HashTuple(const Tuple& t) const {
     return Hasher<Tuple>()(t);
   }
 
   template <typename T>
-  static void hashCombine(std::size_t* seed, const T& value) {
+  static void HashCombine(std::size_t* seed, const T& value) {
     std::hash<T> hasher;
     *seed ^= hasher(value) + 0x9e3779b9 + (*seed << 6) + (*seed >> 2);
   }
