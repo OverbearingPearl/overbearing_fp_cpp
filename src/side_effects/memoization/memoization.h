@@ -78,8 +78,9 @@ class Memoization {
         return result;
       }
       LOG("Cache hit");
-      cache_policy_.insert(&cache_, key, it->second);
-      return *std::static_pointer_cast<ResultType>(it->second);
+      const auto value = it->second;
+      cache_policy_.insert(&cache_, key, value);
+      return *std::static_pointer_cast<ResultType>(value);
     }
 
    private:
