@@ -31,24 +31,10 @@
 
 #include "src/side_effects/cache/policy.h"
 #include "src/side_effects/io/logging.h"
+#include "src/utils/traits/func_traits.h"
 
 namespace side_effects {
 namespace memoization {
-
-template <typename Func>
-struct FunctionTraits;
-
-template <typename ReturnType, typename... Args>
-struct FunctionTraits<std::function<ReturnType(Args...)>> {
-  using result_type = ReturnType;
-  using arg_tuple_type = std::tuple<Args...>;
-};
-
-template <typename ReturnType, typename ClassType, typename... Args>
-struct FunctionTraits<ReturnType (ClassType::*)(Args...)> {
-  using result_type = ReturnType;
-  using arg_tuple_type = std::tuple<ClassType*, Args...>;
-};
 
 template <typename Func>
 struct NoCachePolicy;
@@ -93,8 +79,10 @@ class Memoization {
  private:
   template <typename Func, typename CachePolicy>
   struct MemoizedFunc {
-    using ReturnType = typename FunctionTraits<Func>::result_type;
-    using ArgTupleType = typename FunctionTraits<Func>::arg_tuple_type;
+    using ReturnType =
+        typename utils::traits::FunctionTraits<Func>::result_type;
+    using ArgTupleType =
+        typename utils::traits::FunctionTraits<Func>::arg_tuple_type;
 
     explicit MemoizedFunc(Func func, CachePolicy cache_policy = CachePolicy())
         : func_(func),
