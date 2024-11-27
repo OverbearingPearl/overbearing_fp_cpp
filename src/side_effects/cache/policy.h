@@ -26,14 +26,15 @@
 #include <tuple>
 #include <unordered_map>
 
-#include "src/side_effects/cache/tuple_hash.h"
+#include "src/utils/immutable/tuple.h"
 
 namespace side_effects {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-using Cache = std::unordered_map<KeyType, std::shared_ptr<ValueType>, TupleHash,
-                                 TupleEqual>;
+using Cache = std::unordered_map<KeyType, std::shared_ptr<ValueType>,
+                                 utils::immutable::TupleHash,
+                                 utils::immutable::TupleEqual>;
 
 template <typename KeyType, typename ValueType>
 class CachePolicy {

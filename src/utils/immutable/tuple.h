@@ -25,8 +25,8 @@
 #include <functional>
 #include <tuple>
 
-namespace side_effects {
-namespace cache {
+namespace utils {
+namespace immutable {
 
 struct TupleHash {
   template <typename... Args>
@@ -74,5 +74,5 @@ struct TupleEqual {
   }
 };
 
-}  // namespace cache
-}  // namespace side_effects
+}  // namespace immutable
+}  // namespace utils

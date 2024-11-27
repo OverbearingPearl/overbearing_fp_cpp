@@ -88,7 +88,9 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
   }
 
   size_t capacity_;
-  std::unordered_map<KeyType, size_t, TupleHash, TupleEqual> frequency_list_;
+  std::unordered_map<KeyType, size_t, utils::immutable::TupleHash,
+                     utils::immutable::TupleEqual>
+      frequency_list_;
   std::list<KeyType> frequency_order_;
 };
 
