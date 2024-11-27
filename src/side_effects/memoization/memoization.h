@@ -32,7 +32,6 @@
 #include "src/side_effects/cache/policy.h"
 #include "src/side_effects/io/logging.h"
 
-
 namespace side_effects {
 namespace memoization {
 
@@ -52,19 +51,19 @@ struct FunctionTraits<ReturnType (ClassType::*)(Args...)> {
 };
 
 template <typename Func>
-struct DefaultCachePolicy;
+struct NoCachePolicy;
 
 template <typename ReturnType, typename... Args>
-struct DefaultCachePolicy<std::function<ReturnType(Args...)>> {
+struct NoCachePolicy<std::function<ReturnType(Args...)>> {
   using type =
-      side_effects::cache::DefaultCachePolicy<std::tuple<Args...>, ReturnType>;
+      side_effects::cache::NoCachePolicy<std::tuple<Args...>, ReturnType>;
 };
 
 template <typename ReturnType, typename ClassType, typename... Args>
-struct DefaultCachePolicy<std::function<ReturnType(ClassType*, Args...)>> {
+struct NoCachePolicy<std::function<ReturnType(ClassType*, Args...)>> {
   using type =
-      side_effects::cache::DefaultCachePolicy<std::tuple<ClassType*, Args...>,
-                                              ReturnType>;
+      side_effects::cache::NoCachePolicy<std::tuple<ClassType*, Args...>,
+                                         ReturnType>;
 };
 
 class Memoization {
@@ -73,14 +72,14 @@ class Memoization {
 
  public:
   template <typename Func,
-            typename CachePolicy = typename DefaultCachePolicy<Func>::type>
+            typename CachePolicy = typename NoCachePolicy<Func>::type>
   MemoizedFunc<Func, CachePolicy> Memoize(
       Func func, CachePolicy cache_policy = CachePolicy()) {
     return MemoizedFunc<Func, CachePolicy>(func, cache_policy);
   }
 
   template <typename ReturnType, typename ClassType, typename... Args,
-            typename CachePolicy = typename DefaultCachePolicy<
+            typename CachePolicy = typename NoCachePolicy<
                 std::function<ReturnType(ClassType*, Args...)>>::type>
   MemoizedFunc<std::function<ReturnType(ClassType*, Args...)>, CachePolicy>
   Memoize(ReturnType (ClassType::*func)(Args...),

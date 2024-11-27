@@ -44,7 +44,7 @@ class CachePolicy {
 };
 
 template <typename KeyType, typename ValueType>
-class DefaultCachePolicy : public CachePolicy<KeyType, ValueType> {
+class NoCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
