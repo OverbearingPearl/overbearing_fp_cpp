@@ -22,48 +22,30 @@
 
 #pragma once
 
-#include <list>
 #include <memory>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/cache/policy.h"
+#include "src/side_effects/cache/policy.h"
 
 namespace side_effects {
-namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
+class ClearCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  explicit LRUCachePolicy(size_t capacity) : capacity_(capacity) {}
+  explicit ClearCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
     if (cache->size() >= capacity_) {
-      Evict(cache);
-    }
-    if (key_iterator_map_.find(key) != key_iterator_map_.end()) {
-      access_order_.erase(key_iterator_map_[key]);
+      cache->clear();
     }
     (*cache)[key] = value;
-    access_order_.push_front(key);
-    key_iterator_map_[key] = access_order_.begin();
   }
 
  private:
-  void Evict(Cache<KeyType, ValueType>* cache) {
-    KeyType key_to_evict = access_order_.back();
-    cache->erase(key_to_evict);
-    key_iterator_map_.erase(key_to_evict);
-    access_order_.pop_back();
-  }
-
   size_t capacity_;
-  std::list<KeyType> access_order_;
-  std::unordered_map<KeyType, typename std::list<KeyType>::iterator>
-      key_iterator_map_;
 };
 
 }  // namespace cache
-}  // namespace memoization
 }  // namespace side_effects

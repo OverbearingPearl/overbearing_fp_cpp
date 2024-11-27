@@ -22,21 +22,19 @@
 
 #pragma once
 
-#include <cstdlib>
 #include <memory>
+#include <queue>
 #include <unordered_map>
-#include <vector>
 
-#include "src/side_effects/memoization/cache/policy.h"
+#include "src/side_effects/cache/policy.h"
 
 namespace side_effects {
-namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class RRCachePolicy : public CachePolicy<KeyType, ValueType> {
+class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  explicit RRCachePolicy(size_t capacity) : capacity_(capacity) {}
+  explicit FIFOCachePolicy(size_t capacity) : capacity_(capacity) {}
 
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
@@ -44,21 +42,19 @@ class RRCachePolicy : public CachePolicy<KeyType, ValueType> {
       Evict(cache);
     }
     (*cache)[key] = value;
-    keys_.push_back(key);
+    order_.push(key);
   }
 
  private:
   void Evict(Cache<KeyType, ValueType>* cache) {
-    size_t index = std::rand() % keys_.size();
-    KeyType key_to_evict = keys_[index];
+    KeyType key_to_evict = order_.front();
     cache->erase(key_to_evict);
-    keys_.erase(keys_.begin() + index);
+    order_.pop();
   }
 
   size_t capacity_;
-  std::vector<KeyType> keys_;
+  std::queue<KeyType> order_;
 };
 
 }  // namespace cache
-}  // namespace memoization
 }  // namespace side_effects

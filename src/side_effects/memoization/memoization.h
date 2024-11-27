@@ -29,8 +29,9 @@
 #include <unordered_map>
 #include <utility>
 
+#include "src/side_effects/cache/policy.h"
 #include "src/side_effects/io/logging.h"
-#include "src/side_effects/memoization/cache/policy.h"
+
 
 namespace side_effects {
 namespace memoization {
@@ -56,14 +57,14 @@ struct DefaultCachePolicy;
 template <typename ReturnType, typename... Args>
 struct DefaultCachePolicy<std::function<ReturnType(Args...)>> {
   using type =
-      side_effects::memoization::cache::DefaultCachePolicy<std::tuple<Args...>,
-                                                           ReturnType>;
+      side_effects::cache::DefaultCachePolicy<std::tuple<Args...>, ReturnType>;
 };
 
 template <typename ReturnType, typename ClassType, typename... Args>
 struct DefaultCachePolicy<std::function<ReturnType(ClassType*, Args...)>> {
-  using type = side_effects::memoization::cache::DefaultCachePolicy<
-      std::tuple<ClassType*, Args...>, ReturnType>;
+  using type =
+      side_effects::cache::DefaultCachePolicy<std::tuple<ClassType*, Args...>,
+                                              ReturnType>;
 };
 
 class Memoization {
@@ -126,7 +127,7 @@ class Memoization {
    private:
     Func func_;
     CachePolicy cache_policy_;
-    side_effects::memoization::cache::Cache<ArgTupleType, ReturnType> cache_;
+    side_effects::cache::Cache<ArgTupleType, ReturnType> cache_;
     std::shared_ptr<std::mutex> mutex_;
   };
 };

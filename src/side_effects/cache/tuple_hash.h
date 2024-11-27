@@ -22,47 +22,57 @@
 
 #pragma once
 
-#include <chrono>
-#include <memory>
-#include <unordered_map>
-
-#include "src/side_effects/memoization/cache/policy.h"
+#include <functional>
+#include <tuple>
 
 namespace side_effects {
-namespace memoization {
 namespace cache {
 
-template <typename KeyType, typename ValueType>
-class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
- public:
-  explicit TTLCachePolicy(std::chrono::milliseconds ttl) : ttl_(ttl) {}
-
-  void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
-              std::shared_ptr<ValueType> value) override {
-    auto now = std::chrono::steady_clock::now();
-    (*cache)[key] = value;
-    timestamps_[key] = now;
-    CleanUp(cache);
+struct TupleHash {
+  template <typename... Args>
+  std::size_t operator()(const std::tuple<Args...>& t) const {
+    return HashTuple(t);
   }
 
  private:
-  void CleanUp(Cache<KeyType, ValueType>* cache) {
-    auto now = std::chrono::steady_clock::now();
-    for (auto it = timestamps_.begin(); it != timestamps_.end();) {
-      if (now - it->second > ttl_) {
-        cache->erase(it->first);
-        it = timestamps_.erase(it);
-      } else {
-        ++it;
-      }
+  template <typename Tuple,
+            std::size_t Index = std::tuple_size<Tuple>::value - 1>
+  struct Hasher {
+    std::size_t operator()(const Tuple& t) const {
+      std::size_t hash = Hasher<Tuple, Index - 1>()(t);
+      TupleHash::HashCombine(&hash, std::get<Index>(t));
+      return hash;
     }
+  };
+
+  template <typename Tuple>
+  struct Hasher<Tuple, 0> {
+    std::size_t operator()(const Tuple& t) const {
+      std::size_t hash = 0;
+      TupleHash::HashCombine(&hash, std::get<0>(t));
+      return hash;
+    }
+  };
+
+  template <typename Tuple>
+  std::size_t HashTuple(const Tuple& t) const {
+    return Hasher<Tuple>()(t);
   }
 
-  std::chrono::milliseconds ttl_;
-  std::unordered_map<KeyType, std::chrono::steady_clock::time_point>
-      timestamps_;
+  template <typename T>
+  static void HashCombine(std::size_t* seed, const T& value) {
+    std::hash<T> hasher;
+    *seed ^= hasher(value) + 0x9e3779b9 + (*seed << 6) + (*seed >> 2);
+  }
+};
+
+struct TupleEqual {
+  template <typename... Args>
+  bool operator()(const std::tuple<Args...>& t1,
+                  const std::tuple<Args...>& t2) const {
+    return t1 == t2;
+  }
 };
 
 }  // namespace cache
-}  // namespace memoization
 }  // namespace side_effects

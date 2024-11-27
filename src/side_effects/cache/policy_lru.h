@@ -22,37 +22,46 @@
 
 #pragma once
 
+#include <list>
 #include <memory>
-#include <tuple>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/cache/tuple_hash.h"
+#include "src/side_effects/cache/policy.h"
 
 namespace side_effects {
-namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-using Cache = std::unordered_map<KeyType, std::shared_ptr<ValueType>, TupleHash,
-                                 TupleEqual>;
-
-template <typename KeyType, typename ValueType>
-class CachePolicy {
+class LRUCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  virtual void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
-                      std::shared_ptr<ValueType> value) = 0;
-  virtual ~CachePolicy() = default;
-};
+  explicit LRUCachePolicy(size_t capacity) : capacity_(capacity) {}
 
-template <typename KeyType, typename ValueType>
-class DefaultCachePolicy : public CachePolicy<KeyType, ValueType> {
- public:
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
+    if (cache->size() >= capacity_) {
+      Evict(cache);
+    }
+    if (key_iterator_map_.find(key) != key_iterator_map_.end()) {
+      access_order_.erase(key_iterator_map_[key]);
+    }
     (*cache)[key] = value;
+    access_order_.push_front(key);
+    key_iterator_map_[key] = access_order_.begin();
   }
+
+ private:
+  void Evict(Cache<KeyType, ValueType>* cache) {
+    KeyType key_to_evict = access_order_.back();
+    cache->erase(key_to_evict);
+    key_iterator_map_.erase(key_to_evict);
+    access_order_.pop_back();
+  }
+
+  size_t capacity_;
+  std::list<KeyType> access_order_;
+  std::unordered_map<KeyType, typename std::list<KeyType>::iterator>
+      key_iterator_map_;
 };
 
 }  // namespace cache
-}  // namespace memoization
 }  // namespace side_effects

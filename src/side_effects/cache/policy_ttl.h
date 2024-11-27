@@ -22,41 +22,45 @@
 
 #pragma once
 
+#include <chrono>
 #include <memory>
-#include <queue>
 #include <unordered_map>
 
-#include "src/side_effects/memoization/cache/policy.h"
+#include "src/side_effects/cache/policy.h"
 
 namespace side_effects {
-namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
+class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  explicit FIFOCachePolicy(size_t capacity) : capacity_(capacity) {}
+  explicit TTLCachePolicy(std::chrono::milliseconds ttl) : ttl_(ttl) {}
 
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
-    if (cache->size() >= capacity_) {
-      Evict(cache);
-    }
+    auto now = std::chrono::steady_clock::now();
     (*cache)[key] = value;
-    order_.push(key);
+    timestamps_[key] = now;
+    CleanUp(cache);
   }
 
  private:
-  void Evict(Cache<KeyType, ValueType>* cache) {
-    KeyType key_to_evict = order_.front();
-    cache->erase(key_to_evict);
-    order_.pop();
+  void CleanUp(Cache<KeyType, ValueType>* cache) {
+    auto now = std::chrono::steady_clock::now();
+    for (auto it = timestamps_.begin(); it != timestamps_.end();) {
+      if (now - it->second > ttl_) {
+        cache->erase(it->first);
+        it = timestamps_.erase(it);
+      } else {
+        ++it;
+      }
+    }
   }
 
-  size_t capacity_;
-  std::queue<KeyType> order_;
+  std::chrono::milliseconds ttl_;
+  std::unordered_map<KeyType, std::chrono::steady_clock::time_point>
+      timestamps_;
 };
 
 }  // namespace cache
-}  // namespace memoization
 }  // namespace side_effects

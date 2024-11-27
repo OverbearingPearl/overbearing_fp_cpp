@@ -29,11 +29,10 @@
 #include <unordered_map>
 #include <utility>
 
+#include "src/side_effects/cache/policy.h"
 #include "src/side_effects/io/logging.h"
-#include "src/side_effects/memoization/cache/policy.h"
 
 namespace side_effects {
-namespace memoization {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
@@ -94,5 +93,4 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
 };
 
 }  // namespace cache
-}  // namespace memoization
 }  // namespace side_effects
