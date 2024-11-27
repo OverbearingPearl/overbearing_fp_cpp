@@ -46,8 +46,9 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
     for (const auto& pair : frequency_list_) {
-      LOG("Insert()", " capacity: ", capacity_, ", size: ", cache->size(),
-          ", Key: ", std::get<0>(pair.first), ", Frequency: ", pair.second);
+      LOG("Before Insert()", " capacity: ", capacity_,
+          ", size: ", cache->size(), ", Key: ", std::get<0>(pair.first),
+          ", Frequency: ", pair.second);
     }
     if (cache->size() >= capacity_) {
       Evict(cache);
@@ -60,18 +61,17 @@ class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
       frequency_order_.push_back(key);
     }
     for (const auto& pair : frequency_list_) {
-      LOG("Insert()", " capacity: ", capacity_, ", size: ", cache->size(),
+      LOG("After Insert()", " capacity: ", capacity_, ", size: ", cache->size(),
           ", Key: ", std::get<0>(pair.first), ", Frequency: ", pair.second);
     }
   }
 
  private:
   void Touch(const KeyType& key) {
-    if (frequency_list_.find(key) != frequency_list_.end()) {
-      frequency_list_[key]++;
-      frequency_order_.remove(key);
-      frequency_order_.push_back(key);
-    }
+    frequency_list_[key]++;
+    frequency_order_.remove(key);
+    frequency_order_.push_back(key);
+    LOG("Touch()", " Key: ", std::get<0>(key));
   }
 
   void Evict(Cache<KeyType, ValueType>* cache) {
