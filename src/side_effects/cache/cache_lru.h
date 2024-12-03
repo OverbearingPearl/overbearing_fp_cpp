@@ -22,40 +22,45 @@
 
 #pragma once
 
-#include <cstdlib>
+#include <list>
 #include <memory>
 #include <unordered_map>
-#include <vector>
 
-#include "src/side_effects/cache/policy.h"
+#include "src/side_effects/cache/cache.h"
 
 namespace side_effects {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class RRCachePolicy : public CachePolicy<KeyType, ValueType> {
+class CacheWithLruPolicy : public Insertable<KeyType, ValueType> {
  public:
-  explicit RRCachePolicy(size_t capacity) : capacity_(capacity) {}
+  explicit CacheWithLruPolicy(size_t capacity) : capacity_(capacity) {}
 
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
     if (cache->size() >= capacity_) {
       Evict(cache);
     }
+    if (key_iterator_map_.find(key) != key_iterator_map_.end()) {
+      access_order_.erase(key_iterator_map_[key]);
+    }
     (*cache)[key] = value;
-    keys_.push_back(key);
+    access_order_.push_front(key);
+    key_iterator_map_[key] = access_order_.begin();
   }
 
  private:
   void Evict(Cache<KeyType, ValueType>* cache) {
-    size_t index = std::rand() % keys_.size();
-    KeyType key_to_evict = keys_[index];
+    KeyType key_to_evict = access_order_.back();
     cache->erase(key_to_evict);
-    keys_.erase(keys_.begin() + index);
+    key_iterator_map_.erase(key_to_evict);
+    access_order_.pop_back();
   }
 
   size_t capacity_;
-  std::vector<KeyType> keys_;
+  std::list<KeyType> access_order_;
+  std::unordered_map<KeyType, typename std::list<KeyType>::iterator>
+      key_iterator_map_;
 };
 
 }  // namespace cache

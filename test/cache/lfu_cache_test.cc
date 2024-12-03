@@ -26,11 +26,11 @@
 #include <string>
 #include <tuple>
 
-#include "src/side_effects/cache/policy_lfu.h"
+#include "src/side_effects/cache/cache_lfu.h"
 
 TEST(Cache, PolicyLfu_InsertSameKeyTwice_CacheSizeIsOne) {
-  side_effects::cache::LfuCachePolicy<std::tuple<std::string>, int> lfu_policy(
-      1);
+  side_effects::cache::CacheWithLfuPolicy<std::tuple<std::string>, int>
+      lfu_policy(1);
   auto cache = std::make_shared<
       side_effects::cache::Cache<std::tuple<std::string>, int>>();
   lfu_policy.Insert(cache.get(), std::make_tuple("key"),

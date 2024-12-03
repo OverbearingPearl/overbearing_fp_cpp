@@ -29,17 +29,17 @@
 #include <unordered_map>
 #include <utility>
 
-#include "src/side_effects/cache/policy.h"
+#include "src/side_effects/cache/cache.h"
 #include "src/side_effects/io/logging.h"
 
 namespace side_effects {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class LfuCachePolicy : public CachePolicy<KeyType, ValueType> {
+class CacheWithLfuPolicy : public Insertable<KeyType, ValueType> {
  public:
-  explicit LfuCachePolicy(size_t capacity) : capacity_(capacity) {
-    LOG("LfuCachePolicy capacity: ", capacity_);
+  explicit CacheWithLfuPolicy(size_t capacity) : capacity_(capacity) {
+    LOG("CacheWithLfuPolicy capacity: ", capacity_);
   }
 
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,

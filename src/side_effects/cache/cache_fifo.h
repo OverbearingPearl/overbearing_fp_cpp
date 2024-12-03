@@ -26,15 +26,15 @@
 #include <queue>
 #include <unordered_map>
 
-#include "src/side_effects/cache/policy.h"
+#include "src/side_effects/cache/cache.h"
 
 namespace side_effects {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class FIFOCachePolicy : public CachePolicy<KeyType, ValueType> {
+class CacheWithFifoPolicy : public Insertable<KeyType, ValueType> {
  public:
-  explicit FIFOCachePolicy(size_t capacity) : capacity_(capacity) {}
+  explicit CacheWithFifoPolicy(size_t capacity) : capacity_(capacity) {}
 
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {

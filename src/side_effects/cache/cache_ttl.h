@@ -26,15 +26,15 @@
 #include <memory>
 #include <unordered_map>
 
-#include "src/side_effects/cache/policy.h"
+#include "src/side_effects/cache/cache.h"
 
 namespace side_effects {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class TTLCachePolicy : public CachePolicy<KeyType, ValueType> {
+class CacheWithTtlPolicy : public Insertable<KeyType, ValueType> {
  public:
-  explicit TTLCachePolicy(std::chrono::milliseconds ttl) : ttl_(ttl) {}
+  explicit CacheWithTtlPolicy(std::chrono::milliseconds ttl) : ttl_(ttl) {}
 
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {

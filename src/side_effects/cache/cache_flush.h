@@ -23,34 +23,28 @@
 #pragma once
 
 #include <memory>
-#include <tuple>
 #include <unordered_map>
 
-#include "src/utils/immutable/tuple.h"
+#include "src/side_effects/cache/cache.h"
 
 namespace side_effects {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-using Cache = std::unordered_map<KeyType, std::shared_ptr<ValueType>,
-                                 utils::immutable::TupleHash,
-                                 utils::immutable::TupleEqual>;
-
-template <typename KeyType, typename ValueType>
-class CachePolicy {
+class CacheWithFlushPolicy : public Insertable<KeyType, ValueType> {
  public:
-  virtual void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
-                      std::shared_ptr<ValueType> value) = 0;
-  virtual ~CachePolicy() = default;
-};
+  explicit CacheWithFlushPolicy(size_t capacity) : capacity_(capacity) {}
 
-template <typename KeyType, typename ValueType>
-class NoCachePolicy : public CachePolicy<KeyType, ValueType> {
- public:
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
               std::shared_ptr<ValueType> value) override {
+    if (cache->size() >= capacity_) {
+      cache->clear();
+    }
     (*cache)[key] = value;
   }
+
+ private:
+  size_t capacity_;
 };
 
 }  // namespace cache

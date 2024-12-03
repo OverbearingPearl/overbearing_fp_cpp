@@ -29,7 +29,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "src/side_effects/cache/policy.h"
+#include "src/side_effects/cache/cache.h"
 #include "src/side_effects/io/logging.h"
 #include "src/utils/traits/func_traits.h"
 
@@ -37,54 +37,54 @@ namespace side_effects {
 namespace memoization {
 
 template <typename Func>
-struct NoCachePolicy;
+struct CacheWithNoPolicy;
 
 template <typename ReturnType, typename... Args>
-struct NoCachePolicy<std::function<ReturnType(Args...)>> {
+struct CacheWithNoPolicy<std::function<ReturnType(Args...)>> {
   using type =
-      side_effects::cache::NoCachePolicy<std::tuple<Args...>, ReturnType>;
+      side_effects::cache::CacheWithNoPolicy<std::tuple<Args...>, ReturnType>;
 };
 
 template <typename ReturnType, typename ClassType, typename... Args>
-struct NoCachePolicy<std::function<ReturnType(ClassType*, Args...)>> {
+struct CacheWithNoPolicy<std::function<ReturnType(ClassType*, Args...)>> {
   using type =
-      side_effects::cache::NoCachePolicy<std::tuple<ClassType*, Args...>,
-                                         ReturnType>;
+      side_effects::cache::CacheWithNoPolicy<std::tuple<ClassType*, Args...>,
+                                             ReturnType>;
 };
 
 class Memoization {
-  template <typename Func, typename CachePolicy>
+  template <typename Func, typename Insertable>
   struct MemoizedFunc;
 
  public:
   template <typename Func,
-            typename CachePolicy = typename NoCachePolicy<Func>::type>
-  MemoizedFunc<Func, CachePolicy> Memoize(
-      Func func, CachePolicy cache_policy = CachePolicy()) {
-    return MemoizedFunc<Func, CachePolicy>(func, cache_policy);
+            typename Insertable = typename CacheWithNoPolicy<Func>::type>
+  MemoizedFunc<Func, Insertable> Memoize(
+      Func func, Insertable cache_policy = Insertable()) {
+    return MemoizedFunc<Func, Insertable>(func, cache_policy);
   }
 
   template <typename ReturnType, typename ClassType, typename... Args,
-            typename CachePolicy = typename NoCachePolicy<
+            typename Insertable = typename CacheWithNoPolicy<
                 std::function<ReturnType(ClassType*, Args...)>>::type>
-  MemoizedFunc<std::function<ReturnType(ClassType*, Args...)>, CachePolicy>
+  MemoizedFunc<std::function<ReturnType(ClassType*, Args...)>, Insertable>
   Memoize(ReturnType (ClassType::*func)(Args...),
-          CachePolicy cache_policy = CachePolicy()) {
+          Insertable cache_policy = Insertable()) {
     return MemoizedFunc<std::function<ReturnType(ClassType*, Args...)>,
-                        CachePolicy>(
+                        Insertable>(
         [func](ClassType* obj, Args... args) { return (obj->*func)(args...); },
         cache_policy);
   }
 
  private:
-  template <typename Func, typename CachePolicy>
+  template <typename Func, typename Insertable>
   struct MemoizedFunc {
     using ReturnType =
         typename utils::traits::FunctionTraits<Func>::result_type;
     using ArgTupleType =
         typename utils::traits::FunctionTraits<Func>::arg_tuple_type;
 
-    explicit MemoizedFunc(Func func, CachePolicy cache_policy = CachePolicy())
+    explicit MemoizedFunc(Func func, Insertable cache_policy = Insertable())
         : func_(func),
           cache_policy_(cache_policy),
           mutex_(std::make_shared<std::mutex>()) {}
@@ -113,7 +113,7 @@ class Memoization {
 
    private:
     Func func_;
-    CachePolicy cache_policy_;
+    Insertable cache_policy_;
     side_effects::cache::Cache<ArgTupleType, ReturnType> cache_;
     std::shared_ptr<std::mutex> mutex_;
   };
