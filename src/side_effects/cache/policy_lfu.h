@@ -36,10 +36,10 @@ namespace side_effects {
 namespace cache {
 
 template <typename KeyType, typename ValueType>
-class LFUCachePolicy : public CachePolicy<KeyType, ValueType> {
+class LfuCachePolicy : public CachePolicy<KeyType, ValueType> {
  public:
-  explicit LFUCachePolicy(size_t capacity) : capacity_(capacity) {
-    LOG("LFUCachePolicy capacity: ", capacity_);
+  explicit LfuCachePolicy(size_t capacity) : capacity_(capacity) {
+    LOG("LfuCachePolicy capacity: ", capacity_);
   }
 
   void Insert(Cache<KeyType, ValueType>* cache, const KeyType& key,
